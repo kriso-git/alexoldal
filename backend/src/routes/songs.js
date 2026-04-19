@@ -13,6 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const MUSIC_DIR = process.env.UPLOADS_DIR
   ? path.join(process.env.UPLOADS_DIR, 'music')
   : path.join(__dirname, '../../data/uploads/music')
+fs.mkdirSync(MUSIC_DIR, { recursive: true })
 
 const storage = multer.diskStorage({
   destination: MUSIC_DIR,

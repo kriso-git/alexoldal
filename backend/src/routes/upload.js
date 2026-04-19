@@ -2,6 +2,7 @@ import { Router } from 'express'
 import multer from 'multer'
 import path from 'path'
 import crypto from 'crypto'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { requireAdmin } from '../middleware/auth.js'
 
@@ -9,6 +10,7 @@ export const uploadRouter = Router()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, '../../data/uploads')
+fs.mkdirSync(UPLOADS_DIR, { recursive: true })
 
 const ALLOWED_MIME = new Set([
   'video/mp4', 'video/webm', 'video/ogg',

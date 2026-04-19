@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const dbPath = path.resolve(__dirname, '../../', process.env.DB_PATH || './data/f3xykee.db')
 
+import fs from 'fs'
+
 let _db = null
 
 export function getDb() {
@@ -14,6 +16,7 @@ export function getDb() {
 }
 
 export async function initDb() {
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true })
   _db = new Database(dbPath)
   _db.exec(SCHEMA_SQL)
 
