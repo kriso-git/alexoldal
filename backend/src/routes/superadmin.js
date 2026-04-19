@@ -133,7 +133,7 @@ superadminRouter.get('/stats', (req, res) => {
 
 // PATCH /api/superadmin/users/:id/permissions
 superadminRouter.patch('/users/:id/permissions',
-  body('can_post').isBoolean(),
+  body('can_post').custom(v => v === true || v === false || v === 'true' || v === 'false').withMessage('can_post must be boolean'),
   (req, res) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).json({ error: 'Érvénytelen kérés' })

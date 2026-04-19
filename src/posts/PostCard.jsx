@@ -70,14 +70,19 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
   const roleBadge = ROLE_BADGE[post.authorRole]
   const dragging = draggingId === post.id
   const dragOver = dragOverId === post.id && draggingId !== post.id
+  const articleRef = useRef(null)
+
+  const enableDrag = () => articleRef.current?.setAttribute('draggable', 'true')
+  const disableDrag = () => articleRef.current?.setAttribute('draggable', 'false')
 
   return (
     <article
+      ref={articleRef}
       className={`post${dragging ? ' dragging' : ''}${dragOver ? ' drag-over' : ''}`}
-      draggable="true"
       onDragStart={(e) => onDragStart(e, post.id)}
       onDragOver={(e) => onDragOver(e, post.id)}
       onDrop={(e) => onDrop(e, post.id)}
+      onDragEnd={disableDrag}
       style={{ animationDelay: `${Math.min(index, 6) * 0.05}s` }}
     >
       <div className="post-head">
@@ -100,7 +105,12 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
           </div>
           <h2 className="post-title glitch-hover">{post.title}</h2>
         </div>
-        <div className="post-handle" title="Húzd át a sorrend átrendezéséhez">⋮⋮⋮</div>
+        <div
+          className="post-handle"
+          title="Húzd a sorrend átrendezéséhez"
+          onMouseEnter={enableDrag}
+          onMouseLeave={disableDrag}
+        >⋮⋮⋮</div>
       </div>
 
       {post.mediaType === 'youtube' && post.mediaSrc && (

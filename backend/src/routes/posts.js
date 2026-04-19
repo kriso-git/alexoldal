@@ -114,9 +114,12 @@ postsRouter.post('/',
     const db = getDb()
     const { title, category, body: bodyText, mediaType, mediaSrc, mediaLabel } = req.body
 
-    // Validate mediaSrc if provided — allow empty or valid URL
+    // Validate mediaSrc: allow relative /uploads/ paths or full URLs
     if (mediaSrc && mediaSrc.trim()) {
-      try { new URL(mediaSrc) } catch { return res.status(422).json({ error: 'Invalid media URL' }) }
+      const src = mediaSrc.trim()
+      if (!src.startsWith('/uploads/') && !src.startsWith('/api/')) {
+        try { new URL(src) } catch { return res.status(422).json({ error: 'Invalid media URL' }) }
+      }
     }
 
     const id = mkId()
