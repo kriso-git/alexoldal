@@ -3,7 +3,15 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://alexoldal-production.up.railway.app/api/:path*" },
-    { "source": "/uploads/:path*", "destination": "https://alexoldal-production.up.railway.app/uploads/:path*" }
+    { "source": "/api/auth/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/auth/:path*" },
+    { "source": "/api/posts/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/posts/:path*" },
+    { "source": "/api/posts", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/posts" },
+    { "source": "/api/comments/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/comments/:path*" },
+    { "source": "/api/upload", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/upload" },
+    { "source": "/api/superadmin/songs/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/songs/:path*" },
+    { "source": "/api/superadmin/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/superadmin/:path*" },
+    { "source": "/api/songs/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/songs/:path*" },
+    { "source": "/api/songs", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/songs" },
+    { "source": "/api/visit", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/visit" }
   ]
 }

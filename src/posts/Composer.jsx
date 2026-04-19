@@ -49,7 +49,7 @@ export default function Composer({ onPost }) {
     setUploading(true); setUploadPct(0)
     try {
       const result = await uploadFile(file, setUploadPct)
-      setMediaSrc(result.url)
+      setMediaSrc(result.path ?? result.url)
       setMediaType(file.type.startsWith('audio/') ? 'audio' : 'image')
       if (!mediaLabel) setMediaLabel(file.name.replace(/\.[^.]+$/, '').toUpperCase())
       toast('Fájl feltöltve ✓')
