@@ -12,9 +12,9 @@ superadminRouter.use(requireSuperadmin)
 superadminRouter.get('/users', (req, res) => {
   const db = getDb()
   const users = db.prepare(
-    'SELECT id, username, role, is_banned, failed_logins, locked_until, created_at, last_login FROM users ORDER BY created_at DESC'
+    'SELECT id, username, role, is_banned, can_post, failed_logins, locked_until, created_at, last_login FROM users ORDER BY created_at DESC'
   ).all()
-  res.json(users)
+  res.json(users.map(u => ({ ...u, can_post: !!u.can_post })))
 })
 
 // PATCH /api/superadmin/users/:id/role
@@ -130,6 +130,28 @@ superadminRouter.get('/stats', (req, res) => {
   const reactions = db.prepare('SELECT COUNT(*) as n FROM post_reactions').get().n
   res.json({ users, admins, banned, posts, comments, reactions })
 })
+
+// PATCH /api/superadmin/users/:id/permissions
+superadminRouter.patch('/users/:id/permissions',
+  body('can_post').isBoolean(),
+  (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(422).json({ error: 'Érvénytelen kérés' })
+    const db = getDb()
+    const target = db.prepare('SELECT id, username, role FROM users WHERE id=?').get(req.params.id)
+    if (!target) return res.status(404).json({ error: 'User not found' })
+    if (target.role === 'superadmin') return res.status(403).json({ error: 'Superadmin jogait nem lehet módosítani' })
+    const canPost = req.body.can_post === true || req.body.can_post === 'true'
+    db.prepare('UPDATE users SET can_post=? WHERE id=?').run(canPost ? 1 : 0, target.id)
+    audit(db, {
+      actorId: req.user.sub, actorUsername: req.user.username,
+      action: 'set_user_role', targetType: 'user', targetId: String(target.id),
+      details: { username: target.username, can_post: canPost },
+      ip: req.ip,
+    })
+    res.json({ ok: true, can_post: canPost })
+  }
+)
 
 // POST /api/superadmin/users/:id/reset-password — for emergency resets
 superadminRouter.post('/users/:id/reset-password',

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { body, validationResult } from 'express-validator'
 import { getDb, audit } from '../db/index.js'
-import { requireAdmin, optionalAuth, requireAuth } from '../middleware/auth.js'
+import { requireAdmin, requireCanPost, optionalAuth, requireAuth } from '../middleware/auth.js'
 import crypto from 'crypto'
 
 export const postsRouter = Router()
@@ -24,6 +24,7 @@ function formatPost(row, reactions, myReactions, commentCount) {
     mediaLabel: row.media_label || null,
     mediaPoster: row.media_poster || null,
     author: row.username || 'unknown',
+    authorRole: row.role || 'user',
     adminPost: row.role === 'admin' || row.role === 'superadmin',
     createdAt: row.created_at,
     reactions: reactions || { like: 0, fire: 0, skull: 0, laugh: 0 },
@@ -99,13 +100,13 @@ postsRouter.put('/order', requireAdmin,
   }
 )
 
-// POST /api/posts — admin only
+// POST /api/posts — admin or can_post users
 postsRouter.post('/',
-  requireAdmin,
+  requireCanPost,
   body('title').trim().isLength({ min: 1, max: 300 }),
   body('category').isIn(VALID_CATEGORIES),
   body('body').optional({ nullable: true }).isLength({ max: 20000 }),
-  body('mediaType').optional({ nullable: true }).isIn(['none', 'video', 'image', 'placeholder', 'youtube']),
+  body('mediaType').optional({ nullable: true }).isIn(['none', 'image', 'audio', 'placeholder', 'youtube']),
   (req, res) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).json({ error: errors.array()[0].msg })

@@ -44,7 +44,7 @@ export default function Sidebar({ session, activeCategory, onCategory, counts, o
             STEAM
           </a>
           <a href="https://www.twitch.tv/f3xykeewt" target="_blank" rel="noopener noreferrer"
-            className={`social-btn${isLive ? ' live' : ''}`}
+            className={`social-btn twitch-btn${isLive ? ' live' : ''}`}
             style={{
               display: 'block', textAlign: 'center', width: '100%',
               ...(isLive ? { color: '#bf94ff', borderColor: '#bf94ff', boxShadow: '0 0 14px rgba(191,148,255,0.45)' } : {}),

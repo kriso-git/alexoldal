@@ -3,6 +3,8 @@ import { formatDateHu, timeAgoHu, catLabel } from '../data.js'
 import { toast } from '../effects.js'
 import { commentsApi } from '../api.js'
 import Comment from './Comment.jsx'
+import YouTubePlayer from './YouTubePlayer.jsx'
+import AudioPlayer from './AudioPlayer.jsx'
 
 const REACTIONS = [
   { key: 'like',  emoji: '👍' },
@@ -11,18 +13,20 @@ const REACTIONS = [
   { key: 'laugh', emoji: '😂' },
 ]
 
+const ROLE_BADGE = {
+  superadmin: { label: '⚡', color: 'var(--magenta)' },
+  admin:      { label: 'A',  color: 'var(--accent)' },
+}
+
 export default function PostCard({ post, session, onReact, onComment, onReplyComment, onReactComment, onDeleteComment, onDeletePost, onOpenAuth, index, onDragStart, onDragOver, onDrop, draggingId, dragOverId }) {
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
-  const [comments, setComments] = useState(null)   // null = not loaded yet
+  const [comments, setComments] = useState(null)
   const [commentsLoading, setCommentsLoading] = useState(false)
-  const videoRef = useRef(null)
   const mediaRef = useRef(null)
   const isAdmin = session?.role === 'admin' || session?.role === 'superadmin'
-
   const commentCount = post.commentCount || 0
 
-  // Load comments from API when section opens
   useEffect(() => {
     if (!commentsOpen || comments !== null) return
     setCommentsLoading(true)
@@ -32,32 +36,18 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
       .finally(() => setCommentsLoading(false))
   }, [commentsOpen, post.id])
 
-  // Refresh comments when a new comment is added by parent
   useEffect(() => {
     if (post._newComment && commentsOpen) {
       commentsApi.list(post.id).then(data => setComments(data)).catch(() => {})
     }
   }, [post._newComment])
 
-  useEffect(() => {
-    if (!videoRef.current) return
-    const v = videoRef.current, el = mediaRef.current
-    const onEnter = () => { v.play().catch(() => {}); el?.classList.add('playing') }
-    const onLeave = () => { v.pause(); v.currentTime = 0; el?.classList.remove('playing') }
-    el?.addEventListener('mouseenter', onEnter)
-    el?.addEventListener('mouseleave', onLeave)
-    return () => { el?.removeEventListener('mouseenter', onEnter); el?.removeEventListener('mouseleave', onLeave) }
-  }, [post.mediaSrc])
-
   const submitComment = async (e) => {
     e.preventDefault()
     if (!commentText.trim()) return
     if (!session) return onOpenAuth('login')
     const comment = await onComment(post.id, commentText.trim())
-    if (comment) {
-      setComments(prev => prev ? [...prev, comment] : [comment])
-      setCommentText('')
-    }
+    if (comment) { setComments(prev => prev ? [...prev, comment] : [comment]); setCommentText('') }
   }
 
   const handleDeleteComment = async (postId, commentId) => {
@@ -73,12 +63,11 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
 
   const handleReactComment = async (commentId, emoji) => {
     const result = await onReactComment(commentId, emoji)
-    if (result) {
-      setComments(prev => updateCommentReactions(prev, commentId, result))
-    }
+    if (result) setComments(prev => updateCommentReactions(prev, commentId, result))
     return result
   }
 
+  const roleBadge = ROLE_BADGE[post.authorRole]
   const dragging = draggingId === post.id
   const dragOver = dragOverId === post.id && draggingId !== post.id
 
@@ -99,32 +88,30 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
             <span title={formatDateHu(post.createdAt)}>{formatDateHu(post.createdAt)}</span>
             <span className="dot">·</span>
             <span>{timeAgoHu(post.createdAt)}</span>
+            <span className="dot">·</span>
+            <span className="post-author-wrap">
+              <span className="post-author">@{post.author}</span>
+              {roleBadge && (
+                <span className="post-author-badge" style={{ color: roleBadge.color, borderColor: roleBadge.color }}>
+                  {roleBadge.label}
+                </span>
+              )}
+            </span>
           </div>
           <h2 className="post-title glitch-hover">{post.title}</h2>
         </div>
         <div className="post-handle" title="Húzd át a sorrend átrendezéséhez">⋮⋮⋮</div>
       </div>
 
-      {post.mediaType === 'video' && post.mediaSrc && (
-        <div className="post-media" ref={mediaRef}>
-          <video ref={videoRef} src={post.mediaSrc} muted loop playsInline preload="none" />
-          <div className="play-hint">{post.mediaLabel || '▸ HOVER TO PLAY'}</div>
-        </div>
-      )}
       {post.mediaType === 'youtube' && post.mediaSrc && (
-        <div className="post-media" style={{ aspectRatio: '16/9', padding: 0, overflow: 'hidden' }}>
-          <iframe
-            src={post.mediaSrc}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-            loading="lazy"
-          />
-        </div>
+        <YouTubePlayer src={post.mediaSrc} />
+      )}
+      {post.mediaType === 'audio' && post.mediaSrc && (
+        <AudioPlayer src={post.mediaSrc} label={post.mediaLabel} />
       )}
       {post.mediaType === 'image' && post.mediaSrc && (
         <div className="post-media img-type" ref={mediaRef}>
-          <img src={post.mediaSrc} alt={post.title} loading="lazy" />
+          <img src={post.mediaSrc} alt={post.mediaLabel || post.title} loading="lazy" />
         </div>
       )}
       {post.mediaType === 'placeholder' && (
@@ -194,7 +181,6 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
             <button className="inline-link" onClick={() => onOpenAuth('register')}>regisztrálj</button>.
           </div>
         )}
-
         <div className="comment-list">
           {commentsLoading && (
             <div style={{ fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', padding: 12, letterSpacing: '0.1em' }}>
@@ -223,9 +209,7 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
 }
 
 function removeComment(list, id) {
-  return list
-    .filter(c => c.id !== id)
-    .map(c => ({ ...c, replies: removeComment(c.replies || [], id) }))
+  return list.filter(c => c.id !== id).map(c => ({ ...c, replies: removeComment(c.replies || [], id) }))
 }
 
 function addReply(list, parentId, reply) {

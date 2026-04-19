@@ -56,7 +56,7 @@ authRouter.post('/register',
     audit(db, { actorId: user.id, actorUsername: username, action: 'register', ip: req.ip })
     const accessToken = issueTokens(db, user, res)
 
-    res.status(201).json({ user: { id: user.id, username, role: 'user' }, accessToken })
+    res.status(201).json({ user: { id: user.id, username, role: 'user', can_post: false }, accessToken })
   }
 )
 
@@ -113,7 +113,8 @@ authRouter.post('/login',
     audit(db, { actorId: user.id, actorUsername: user.username, action: 'login', ip: req.ip })
     const accessToken = issueTokens(db, user, res)
 
-    res.json({ user: { id: user.id, username: user.username, role: user.role }, accessToken })
+    const dbUser = db.prepare('SELECT can_post FROM users WHERE id=?').get(user.id)
+    res.json({ user: { id: user.id, username: user.username, role: user.role, can_post: !!dbUser?.can_post }, accessToken })
   }
 )
 
@@ -151,7 +152,8 @@ authRouter.post('/refresh', (req, res) => {
   db.prepare('UPDATE refresh_tokens SET revoked=1 WHERE id=?').run(row.id)
   const user = { id: row.user_id, username: row.username, role: row.role }
   const accessToken = issueTokens(db, user, res)
-  res.json({ accessToken, user: { id: user.id, username: user.username, role: user.role } })
+  const fullUser = db.prepare('SELECT can_post FROM users WHERE id=?').get(user.id)
+  res.json({ accessToken, user: { id: user.id, username: user.username, role: user.role, can_post: !!fullUser?.can_post } })
 })
 
 // GET /api/auth/me
@@ -161,9 +163,9 @@ authRouter.get('/me', (req, res) => {
   try {
     const payload = verifyAccessToken(header.slice(7))
     const db = getDb()
-    const row = db.prepare('SELECT id, username, role, is_banned FROM users WHERE id=?').get(payload.sub)
+    const row = db.prepare('SELECT id, username, role, is_banned, can_post FROM users WHERE id=?').get(payload.sub)
     if (!row || row.is_banned) return res.status(403).json({ error: 'Account unavailable' })
-    res.json({ user: { id: row.id, username: row.username, role: row.role } })
+    res.json({ user: { id: row.id, username: row.username, role: row.role, can_post: !!row.can_post } })
   } catch {
     res.status(401).json({ error: 'Invalid token' })
   }

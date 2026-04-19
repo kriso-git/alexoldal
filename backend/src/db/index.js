@@ -36,8 +36,9 @@ export async function initDb() {
     }
   }
 
-  // Migrate: add ban_until column to users if missing
+  // Migrations
   try { _db.exec("ALTER TABLE users ADD COLUMN ban_until INTEGER") } catch {}
+  try { _db.exec("ALTER TABLE users ADD COLUMN can_post INTEGER NOT NULL DEFAULT 0") } catch {}
 
   // Initialize post order + visit count if missing
   const order = _db.prepare("SELECT value FROM settings WHERE key='post_order'").get()

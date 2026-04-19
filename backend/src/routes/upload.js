@@ -4,7 +4,7 @@ import path from 'path'
 import crypto from 'crypto'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { requireAdmin } from '../middleware/auth.js'
+import { requireCanPost } from '../middleware/auth.js'
 
 export const uploadRouter = Router()
 
@@ -13,8 +13,7 @@ const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, '../../data/
 fs.mkdirSync(UPLOADS_DIR, { recursive: true })
 
 const ALLOWED_MIME = new Set([
-  'video/mp4', 'video/webm', 'video/ogg',
-  'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/webm',
+  'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/flac',
   'image/jpeg', 'image/png', 'image/gif', 'image/webp',
 ])
 
@@ -29,7 +28,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
   fileFilter: (req, file, cb) => {
     if (ALLOWED_MIME.has(file.mimetype)) return cb(null, true)
     cb(new Error('Nem engedélyezett fájltípus'))
@@ -37,7 +36,7 @@ const upload = multer({
 })
 
 // POST /api/upload — admin only, single file
-uploadRouter.post('/', requireAdmin, upload.single('file'), (req, res) => {
+uploadRouter.post('/', requireCanPost, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nincs fájl' })
   const url = `/uploads/${req.file.filename}`
   res.json({ url, filename: req.file.filename, mimetype: req.file.mimetype, size: req.file.size })

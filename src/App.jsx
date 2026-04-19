@@ -311,6 +311,7 @@ export default function App() {
 
   const isAdmin = session?.role === 'admin' || session?.role === 'superadmin'
   const isSuperadmin = session?.role === 'superadmin'
+  const canPost = isAdmin || !!session?.can_post
   const layoutClass = tweaks.layout === 'grid' ? 'layout-grid' : tweaks.layout === 'timeline' ? 'layout-timeline' : 'layout-feed'
 
   if (loading) return (
@@ -351,20 +352,22 @@ export default function App() {
             </div>
           </div>
 
-          {isAdmin && (
+          {canPost && (
             <>
-              <div className="admin-bar">
-                <div className="admin-bar-info">
-                  <span className="admin-badge">{isSuperadmin ? 'SUPERADMIN' : 'ADMIN'}</span>
-                  <span>@{session.username} belépve · teljes jogosultság</span>
+              {isAdmin && (
+                <div className="admin-bar">
+                  <div className="admin-bar-info">
+                    <span className="admin-badge">{isSuperadmin ? 'SUPERADMIN' : 'ADMIN'}</span>
+                    <span>@{session.username} belépve · teljes jogosultság</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {isSuperadmin && (
+                      <button className="btn btn-admin" onClick={() => setSuperadminOpen(true)}>⚡ Panel</button>
+                    )}
+                    <button className="btn btn-danger" onClick={handleLogout}>Kilépés</button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {isSuperadmin && (
-                    <button className="btn btn-admin" onClick={() => setSuperadminOpen(true)}>⚡ Panel</button>
-                  )}
-                  <button className="btn btn-danger" onClick={handleLogout}>Kilépés</button>
-                </div>
-              </div>
+              )}
               <Composer onPost={addPost} />
             </>
           )}

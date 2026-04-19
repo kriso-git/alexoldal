@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { CATEGORIES } from '../data.js'
 import { toast } from '../effects.js'
 import { uploadFile } from '../api.js'
@@ -18,167 +18,173 @@ function toYoutubeEmbed(url) {
   } catch { return url.trim() }
 }
 
-function mediaTypeFromMime(mime) {
-  if (mime.startsWith('video/')) return 'video'
-  if (mime.startsWith('image/')) return 'image'
-  return 'video'
-}
+const ALLOWED_UPLOAD = new Set([
+  'image/gif', 'image/jpeg', 'image/png', 'image/webp',
+  'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/flac',
+])
 
 export default function Composer({ onPost }) {
+  const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [mediaType, setMediaType] = useState('none')
-  const [mediaSrc, setMediaSrc] = useState('')
   const [category, setCategory] = useState('posts')
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [mediaSrc, setMediaSrc] = useState('')
+  const [mediaType, setMediaType] = useState('none')
   const [mediaLabel, setMediaLabel] = useState('')
-  const [showHelp, setShowHelp] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadPct, setUploadPct] = useState(0)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef(null)
 
-  const handleFileUpload = useCallback(async (file) => {
+  useEffect(() => {
+    setMediaSrc(''); setMediaType('none'); setMediaLabel(''); setYoutubeUrl('')
+  }, [category])
+
+  const handleFile = useCallback(async (file) => {
     if (!file) return
-    setUploading(true)
-    setUploadPct(0)
+    if (!ALLOWED_UPLOAD.has(file.type)) {
+      return toast('Csak kép (gif/jpg/png/webp) és hang (mp3/wav/ogg) fájl engedélyezett', 'err')
+    }
+    setUploading(true); setUploadPct(0)
     try {
       const result = await uploadFile(file, setUploadPct)
       setMediaSrc(result.url)
-      setMediaType(mediaTypeFromMime(file.type))
+      setMediaType(file.type.startsWith('audio/') ? 'audio' : 'image')
       if (!mediaLabel) setMediaLabel(file.name.replace(/\.[^.]+$/, '').toUpperCase())
       toast('Fájl feltöltve ✓')
     } catch (e) {
       toast(e.message, 'err')
-    } finally {
-      setUploading(false)
-    }
+    } finally { setUploading(false) }
   }, [mediaLabel])
 
   const onDrop = useCallback((e) => {
-    e.preventDefault()
-    setDragOver(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFileUpload(file)
-  }, [handleFileUpload])
+    e.preventDefault(); setDragOver(false)
+    handleFile(e.dataTransfer.files[0])
+  }, [handleFile])
 
   const submit = (e) => {
     e.preventDefault()
     if (!title.trim()) return toast('Adj címet a posztnak', 'err')
-    let finalSrc = mediaSrc.trim() || null
-    if (mediaType === 'youtube' && finalSrc) finalSrc = toYoutubeEmbed(finalSrc)
+
+    let finalMediaType = mediaType
+    let finalMediaSrc = null
+
+    if (category === 'videos') {
+      if (!youtubeUrl.trim()) return toast('Adj meg YouTube URL-t', 'err')
+      finalMediaType = 'youtube'
+      finalMediaSrc = toYoutubeEmbed(youtubeUrl.trim())
+    } else {
+      finalMediaSrc = mediaSrc || null
+    }
+
     onPost({
       title: title.trim(),
       category,
       body: body.trim(),
-      mediaType: mediaType !== 'none' && !finalSrc ? 'placeholder' : mediaType,
-      mediaSrc: mediaType !== 'none' ? finalSrc : null,
+      mediaType: finalMediaSrc ? finalMediaType : 'none',
+      mediaSrc: finalMediaSrc,
       mediaLabel: mediaLabel.trim() || null,
     })
-    setTitle(''); setBody(''); setMediaSrc(''); setMediaLabel('')
+    setTitle(''); setBody(''); setMediaSrc(''); setMediaType('none')
+    setYoutubeUrl(''); setMediaLabel('')
+    setOpen(false)
   }
 
   return (
-    <form className="composer" onSubmit={submit}>
-      <div className="composer-head">
-        <div className="composer-title">[ új_poszt.sh ]</div>
-        <button type="button"
-          style={{ fontSize: 10, letterSpacing: '0.15em', color: 'var(--text-dim)', background: 'none', border: 'none', cursor: 'pointer' }}
-          onClick={() => setShowHelp(v => !v)}>
-          {showHelp ? '▲ súgó bezár' : '▼ hogyan tölts fel?'}
-        </button>
-      </div>
-
-      {showHelp && (
-        <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', fontSize: 11, color: 'var(--text-dim)', lineHeight: 1.8, marginBottom: 8 }}>
-          <div style={{ color: 'var(--accent)', letterSpacing: '0.1em', marginBottom: 6 }}>// FELTÖLTÉSI ÚTMUTATÓ</div>
-          <div><span style={{ color: 'var(--cyan)' }}>Fájl drag-drop:</span> Húzd rá a fájlt az alábbi sárga területre — mp4, mp3, jpg, gif, webp, stb. Max 500 MB. Automatikusan feltöltődik a szerverre.</div>
-          <div style={{ marginTop: 5 }}><span style={{ color: 'var(--cyan)' }}>YouTube (beágyazva):</span> Válaszd a <strong>YouTube</strong> típust, illeszd be a linket (watch?v= vagy youtu.be/ — nem nyilvános videó is működik).</div>
-          <div style={{ marginTop: 5 }}><span style={{ color: 'var(--cyan)' }}>Kép URL:</span> Imgur, ImgBB, vagy bármilyen közvetlen képlink (.jpg/.png/.webp).</div>
-        </div>
-      )}
-
-      <div className="composer-row">
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label">Cím</label>
-          <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Mi történt most?" />
-        </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label">Kategória</label>
-          <select className="form-input" value={category} onChange={e => setCategory(e.target.value)}>
-            {CATEGORIES.filter(c => c.id !== 'all').map(c => (
-              <option key={c.id} value={c.id}>{c.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Szöveg (opc.)</label>
-        <textarea className="form-textarea" value={body} onChange={e => setBody(e.target.value)} placeholder="Mondd el..." />
-      </div>
-
-      {/* Drag-drop upload zone */}
-      <div
-        onDrop={onDrop}
-        onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-        onDragLeave={() => setDragOver(false)}
-        onClick={() => !uploading && fileInputRef.current?.click()}
-        style={{
-          border: `2px dashed ${dragOver ? 'var(--accent)' : 'var(--border)'}`,
-          background: dragOver ? 'rgba(200,255,0,0.04)' : 'transparent',
-          borderRadius: 2, padding: '14px 16px', cursor: uploading ? 'wait' : 'pointer',
-          textAlign: 'center', fontSize: 11, color: dragOver ? 'var(--accent)' : 'var(--text-faint)',
-          letterSpacing: '0.1em', transition: 'all 0.15s',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        }}
+    <div className="composer-wrap">
+      <button
+        type="button"
+        className="composer-toggle-btn"
+        onClick={() => setOpen(v => !v)}
       >
-        {uploading ? (
-          <>
-            <span style={{ color: 'var(--accent)' }}>FELTÖLTÉS...</span>
-            <div style={{ flex: 1, maxWidth: 200, height: 4, background: 'var(--border)', borderRadius: 2 }}>
-              <div style={{ width: `${uploadPct}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.1s' }} />
+        <span>[ új_poszt.sh ]</span>
+        <span className="composer-toggle-arrow">{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <form className="composer" onSubmit={submit}>
+          <div className="composer-row">
+            <div className="form-group" style={{ margin: 0, flex: 2 }}>
+              <label className="form-label">Cím</label>
+              <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Mi történt most?" autoFocus />
             </div>
-            <span style={{ color: 'var(--accent)' }}>{uploadPct}%</span>
-          </>
-        ) : mediaSrc && !mediaSrc.startsWith('http') ? (
-          <span style={{ color: 'var(--accent)' }}>✓ {mediaSrc.split('/').pop()} — klikk a cserére</span>
-        ) : (
-          <span>⬆ Húzd ide a fájlt vagy klikkelj — mp4 · mp3 · jpg · gif · webp (max 500 MB)</span>
-        )}
-        <input ref={fileInputRef} type="file" accept="video/*,audio/*,image/*" style={{ display: 'none' }}
-          onChange={e => handleFileUpload(e.target.files[0])} />
-      </div>
+            <div className="form-group" style={{ margin: 0, flex: 1 }}>
+              <label className="form-label">Kategória</label>
+              <select className="form-input" value={category} onChange={e => setCategory(e.target.value)}>
+                {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-      <div className="composer-row">
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label">
-            {mediaType === 'youtube' ? 'YouTube URL' : 'Vagy média URL (opc.)'}
-          </label>
-          <input className="form-input" value={mediaSrc} onChange={e => setMediaSrc(e.target.value)}
-            placeholder={mediaType === 'youtube' ? 'https://youtube.com/watch?v=... vagy youtu.be/...' : 'https://... — ha nem töltöttél fel fájlt'} />
-        </div>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label">Típus</label>
-          <select className="form-input" value={mediaType} onChange={e => setMediaType(e.target.value)}>
-            <option value="none">nincs</option>
-            <option value="youtube">YouTube beágyazás</option>
-            <option value="video">videófájl</option>
-            <option value="image">kép</option>
-            <option value="placeholder">placeholder</option>
-          </select>
-        </div>
-      </div>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label">Szöveg (opc.)</label>
+            <textarea className="form-textarea" value={body} onChange={e => setBody(e.target.value)} placeholder="Mondd el..." rows={3} />
+          </div>
 
-      {mediaType !== 'none' && mediaType !== 'youtube' && (
-        <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label">Média felirat (opc.)</label>
-          <input className="form-input" value={mediaLabel} onChange={e => setMediaLabel(e.target.value)} placeholder="pl. CS2 ▸ INFERNO" />
-        </div>
+          {category === 'videos' ? (
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">YouTube URL</label>
+              <input
+                className="form-input"
+                value={youtubeUrl}
+                onChange={e => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=... vagy youtu.be/... (nem nyilvános is működik)"
+              />
+            </div>
+          ) : (
+            <>
+              <div
+                className={`upload-zone${dragOver ? ' drag-over' : ''}${uploading ? ' uploading' : ''}`}
+                onDrop={onDrop}
+                onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onClick={() => !uploading && fileInputRef.current?.click()}
+              >
+                {uploading ? (
+                  <div className="upload-zone-content">
+                    <span className="upload-zone-text" style={{ color: 'var(--accent)' }}>FELTÖLTÉS...</span>
+                    <div className="upload-progress-bar">
+                      <div className="upload-progress-fill" style={{ width: `${uploadPct}%` }} />
+                    </div>
+                    <span style={{ color: 'var(--accent)', fontSize: 11 }}>{uploadPct}%</span>
+                  </div>
+                ) : mediaSrc ? (
+                  <div className="upload-zone-content">
+                    <span style={{ color: 'var(--accent)', fontSize: 11 }}>
+                      ✓ {mediaSrc.split('/').pop()} [{mediaType}] — klikk a cserére
+                    </span>
+                  </div>
+                ) : (
+                  <div className="upload-zone-content">
+                    <span className="upload-zone-text">⬆ Húzd ide vagy klikkelj</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>gif · jpg · png · webp · mp3 · wav · ogg — max 100 MB</span>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef} type="file"
+                  accept="image/gif,image/jpeg,image/png,image/webp,audio/mpeg,audio/ogg,audio/wav,audio/flac"
+                  style={{ display: 'none' }}
+                  onChange={e => handleFile(e.target.files[0])}
+                />
+              </div>
+              {mediaSrc && (
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Felirat (opc.)</label>
+                  <input className="form-input" value={mediaLabel} onChange={e => setMediaLabel(e.target.value)} placeholder="pl. BEST CLIP 2025" />
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="form-actions">
+            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>Mégse</button>
+            <button type="submit" className="btn btn-admin" disabled={uploading}>▶ Poszt kiadása</button>
+          </div>
+        </form>
       )}
-
-      <div className="form-actions">
-        <button type="submit" className="btn btn-admin" disabled={uploading}>▶ Poszt kiadása</button>
-      </div>
-    </form>
+    </div>
   )
 }

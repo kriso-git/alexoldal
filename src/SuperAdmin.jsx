@@ -42,6 +42,14 @@ function UsersTab({ currentUserId }) {
     } catch (e) { toast(e.message, 'err') }
   }
 
+  const toggleCanPost = async (id, val) => {
+    try {
+      await superadminApi.setPermissions(id, { can_post: val })
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, can_post: val } : u))
+      toast(val ? 'Posztolási jog megadva' : 'Posztolási jog elvéve')
+    } catch (e) { toast(e.message, 'err') }
+  }
+
   const doBan = async (id, banned) => {
     const minutes = banMinutes ? parseInt(banMinutes) : null
     if (banned && minutes && (isNaN(minutes) || minutes < 1)) return toast('Érvénytelen időtartam', 'err')
@@ -132,6 +140,19 @@ function UsersTab({ currentUserId }) {
                   <option value="admin">🛡 Admin</option>
                   <option value="superadmin">⚡ Superadmin</option>
                 </select>
+              )}
+
+              {/* can_post permission — only for non-admin users */}
+              {u.role === 'user' && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, cursor: 'pointer', color: u.can_post ? 'var(--accent)' : 'var(--text-dim)', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!u.can_post}
+                    onChange={e => toggleCanPost(u.id, e.target.checked)}
+                    style={{ accentColor: 'var(--accent)' }}
+                  />
+                  Posztolhat
+                </label>
               )}
 
               {/* Ban button */}

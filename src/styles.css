@@ -1001,4 +1001,133 @@ body.cursor-trail .cursor-dot { display: block; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-1); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); }
+
+/* ── POST AUTHOR ─────────────────────────────────────────────────────────────── */
+.post-author-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.post-author { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.post-author-badge {
+  font-size: 9px; padding: 1px 4px;
+  border: 1px solid; border-radius: 2px;
+  font-family: var(--font-display); letter-spacing: 0.05em;
+}
+
+/* ── COMPOSER (collapsible) ──────────────────────────────────────────────────── */
+.composer-wrap { margin-bottom: 8px; }
+.composer-toggle-btn {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px;
+  background: var(--bg-1); border: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 0.1em; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.composer-toggle-btn:hover { border-color: var(--border-strong); background: var(--bg-2); }
+.composer-toggle-arrow { font-size: 10px; color: var(--text-dim); }
+
+/* upload zone */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: 2px;
+  padding: 14px 16px; cursor: pointer; transition: all 0.15s;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent); background: rgba(var(--accent-rgb), 0.04);
+}
+.upload-zone.uploading { cursor: wait; }
+.upload-zone-content { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.upload-zone-text { font-size: 12px; letter-spacing: 0.1em; color: var(--text-faint); }
+.upload-progress-bar { width: 200px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.upload-progress-fill { height: 100%; background: var(--accent); transition: width 0.1s; }
+
+/* ── TWITCH HOVER ────────────────────────────────────────────────────────────── */
+.twitch-btn:hover {
+  background: #9146ff !important;
+  color: #fff !important;
+  border-color: #9146ff !important;
+}
+
+/* ── YOUTUBE PLAYER ──────────────────────────────────────────────────────────── */
+.yt-player-wrap { width: 100%; }
+.yt-iframe-slot { width: 100%; aspect-ratio: 16/9; }
+.yt-iframe-slot iframe { width: 100%; height: 100%; border: none; display: block; }
+.yt-controls {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-top: none;
+}
+.yt-time { font-size: 10px; font-family: var(--font-mono); color: var(--text-dim); min-width: 32px; }
+.yt-progress {
+  flex: 1; height: 4px; background: var(--border); border-radius: 2px;
+  cursor: pointer; position: relative;
+}
+.yt-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s linear; }
+.yt-progress:hover .yt-progress-fill { background: var(--cyan); }
+.yt-vol-icon { font-size: 12px; }
+.yt-volume-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 70px; height: 3px; background: var(--border); border-radius: 2px; cursor: pointer;
+}
+.yt-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+
+/* ── AUDIO PLAYER ────────────────────────────────────────────────────────────── */
+.audio-player-wrap {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 2px;
+}
+.audio-play-btn {
+  width: 34px; height: 34px; min-width: 34px;
+  border: 1px solid var(--accent); color: var(--accent);
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; border-radius: 2px;
+}
+.audio-play-btn:hover { background: var(--accent); color: var(--bg-0); }
+.audio-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.audio-label { font-size: 10px; letter-spacing: 0.1em; color: var(--accent); font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.audio-progress {
+  height: 4px; background: var(--border); border-radius: 2px; cursor: pointer;
+}
+.audio-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.1s linear; }
+.audio-progress:hover .audio-progress-fill { background: var(--cyan); }
+.audio-times { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-faint); font-family: var(--font-mono); }
+.audio-vol-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.audio-vol-icon { font-size: 11px; }
+.audio-vol-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 55px; height: 3px; background: var(--border); border-radius: 2px; cursor: pointer;
+  writing-mode: horizontal-tb;
+}
+.audio-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+
+/* ── MUSIC PLAYER (bottom-left floating) ─────────────────────────────────────── */
+.music-player {
+  position: fixed; bottom: 16px; left: 16px; z-index: 800;
+  background: var(--bg-1); border: 1px solid var(--border-strong);
+  width: 260px; padding: 8px 10px;
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.15);
+  font-family: var(--font-mono);
+}
+.music-top { display: flex; align-items: center; gap: 6px; }
+.music-bottom { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+.music-progress {
+  height: 3px; background: var(--border); border-radius: 2px; cursor: pointer;
+}
+.music-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s linear; }
+.music-time-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-faint); }
+.music-vol-row { display: flex; align-items: center; gap: 6px; }
+.music-vol-icon { font-size: 11px; }
+.music-vol-slider {
+  -webkit-appearance: none; appearance: none; flex: 1;
+  height: 3px; background: var(--border); border-radius: 2px; cursor: pointer;
+}
+.music-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }

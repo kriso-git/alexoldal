@@ -171,6 +171,8 @@ export const superadminApi = {
   deleteUser: (id) => req(`/superadmin/users/${id}`, { method: 'DELETE' }),
   resetPassword: (id, newPassword) =>
     req(`/superadmin/users/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
+  setPermissions: (id, permissions) =>
+    req(`/superadmin/users/${id}/permissions`, { method: 'PATCH', body: permissions }),
   getAuditLog: (page = 0, action = '', username = '') => {
     const p = new URLSearchParams({ page, limit: 50 })
     if (action) p.set('action', action)
