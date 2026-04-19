@@ -24,3 +24,4 @@ Thumbs.db
 # Design handoff (nem kell a repóban)
 *.zip
 handoff_extracted/
+data/
