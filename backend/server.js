@@ -39,6 +39,7 @@ app.use(helmet({
 }))
 
 app.disable('x-powered-by')
+app.set('trust proxy', 1)
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',').map(s => s.trim())
@@ -73,7 +74,7 @@ app.use('/api', apiRateLimiter)
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRouter)
-app.use('/api', postsRouter)
+app.use('/api/posts', postsRouter)
 app.use('/api', commentsRouter)
 app.use('/api/superadmin', superadminRouter)
 app.use('/api/upload', uploadRouter)
