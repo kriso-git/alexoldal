@@ -190,15 +190,8 @@ body.cursor-trail .cursor-dot { display: block; }
   width: 100%; height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  animation: logo-spin 16s ease-in-out infinite;
+  animation: none !important;
   will-change: transform;
-}
-@keyframes logo-spin {
-  0%   { transform: rotateX(10deg)  rotateY(0deg)   rotateZ(0deg); }
-  25%  { transform: rotateX(-15deg) rotateY(90deg)  rotateZ(6deg); }
-  50%  { transform: rotateX(20deg)  rotateY(180deg) rotateZ(-4deg); }
-  75%  { transform: rotateX(-8deg)  rotateY(270deg) rotateZ(8deg); }
-  100% { transform: rotateX(10deg)  rotateY(360deg) rotateZ(0deg); }
 }
 @keyframes logo-shadow {
   0%,100% { opacity: 0.6; transform: translateX(-50%) scaleX(1); }
@@ -236,7 +229,7 @@ body.cursor-trail .cursor-dot { display: block; }
 .face-left   { transform: rotateY(-90deg) translateZ(65px); }
 .face-top    { transform: rotateX( 90deg) translateZ(65px); }
 .face-bottom { transform: rotateX(-90deg) translateZ(65px); }
-.logo-3d-cube:hover { animation-duration: 6s; }
+
 .cube-name {
   text-align: center;
   font-family: var(--font-display);
@@ -248,7 +241,6 @@ body.cursor-trail .cursor-dot { display: block; }
   line-height: 1.3;
 }
 
-.logo-3d-cube { animation: logo-spin 16s ease-in-out infinite !important; }
 
 /* 3D LOGO CUBE END */
 
