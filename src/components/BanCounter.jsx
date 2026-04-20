@@ -87,7 +87,17 @@ export default function BanCounter() {
       <div className="ban-stat-label"><span>NAPJA NINCS BAN</span><span className="ban-dot"></span></div>
       <div className="ban-stat-value">{d.toLocaleString('hu')}</div>
       <div className="ban-stat-sub">1 game ban</div>
-      <div className="ban-stat-sub" style={{ marginTop: 6, fontSize: 9, lineHeight: 1.6 }}>
+      <div style={{
+        marginTop: 8,
+        padding: '6px 8px',
+        background: 'rgba(var(--accent-rgb), 0.06)',
+        border: '1px solid rgba(var(--accent-rgb), 0.3)',
+        borderRadius: 4,
+        fontSize: 9,
+        lineHeight: 1.7,
+        letterSpacing: '0.05em',
+        color: 'var(--text-dim)',
+      }}>
         🚽 Random befosások Magyarországon:<br />
         <FlipNumber value={count} />
       </div>

@@ -1,6 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#0a0a0f"/>
-  <rect x="0" y="29" width="32" height="3" fill="#c8ff00"/>
-  <text x="2" y="25" font-family="monospace" font-weight="900" font-size="21" fill="#c8ff00" letter-spacing="-1">F3</text>
-  <rect x="0" y="0" width="3" height="29" fill="#c8ff00" opacity="0.4"/>
+  <rect width="32" height="32" rx="4" fill="#9dff00"/>
 </svg>

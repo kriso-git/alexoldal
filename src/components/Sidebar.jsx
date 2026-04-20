@@ -29,14 +29,15 @@ export default function Sidebar({ session, activeCategory, onCategory, counts, o
       <div className="brand">
         <div className="logo-3d">
           <div className="logo-3d-cube">
-            <div className="face face-front">F3xykee</div>
-            <div className="face face-back">F3xykee</div>
-            <div className="face face-right">F3xykee</div>
-            <div className="face face-left">F3xykee</div>
-            <div className="face face-top"></div>
-            <div className="face face-bottom"></div>
+            <div className="face face-front"><img src="/assets/face1.png" alt="" /></div>
+            <div className="face face-back"><img src="/assets/face2.png" alt="" /></div>
+            <div className="face face-right"><img src="/assets/face3.png" alt="" /></div>
+            <div className="face face-left"><img src="/assets/face4.png" alt="" /></div>
+            <div className="face face-top"><img src="/assets/face5.png" alt="" /></div>
+            <div className="face face-bottom"><img src="/assets/face6.png" alt="" /></div>
           </div>
         </div>
+        <div className="cube-name">Alex &ldquo;F3xykee&rdquo; Halász</div>
         <BanCounter />
         <div className="socials" style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
           <a href="https://steamcommunity.com/id/F3xykee/" target="_blank" rel="noopener noreferrer"
