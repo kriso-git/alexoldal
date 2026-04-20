@@ -84,8 +84,8 @@ export default function BanCounter() {
           transform-origin: center bottom;
         }
       `}</style>
-      <div className="ban-stat-label"><span>NAPJA NINCS BAN</span><span className="ban-dot"></span></div>
       <div className="ban-stat-value">{d.toLocaleString('hu')}</div>
+      <div className="ban-stat-label"><span>NAPJA NINCS BAN</span><span className="ban-dot"></span></div>
       <div className="ban-stat-sub">1 game ban</div>
       <div style={{
         marginTop: 8,
