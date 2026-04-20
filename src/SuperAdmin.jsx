@@ -23,6 +23,7 @@ function UsersTab({ currentUserId }) {
   const [newPw, setNewPw] = useState('')
   const [banId, setBanId] = useState(null)
   const [banMinutes, setBanMinutes] = useState('')
+  const [showPw, setShowPw] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -196,11 +197,15 @@ function UsersTab({ currentUserId }) {
           {/* Password reset UI */}
           {resetId === u.id && (
             <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-              <input className="form-input" type="password" placeholder="Új jelszó (min. 8 karakter)"
+              <input className="form-input" type={showPw ? 'text' : 'password'} placeholder="Új jelszó (min. 8 karakter)"
                 value={newPw} onChange={e => setNewPw(e.target.value)} style={{ flex: 1 }} autoFocus />
+              <button className="btn btn-ghost" style={{ fontSize: 10, padding: '4px 10px' }}
+                onClick={() => setShowPw(v => !v)} title={showPw ? 'Elrejt' : 'Mutat'}>
+                {showPw ? '🙈' : '👁'}
+              </button>
               <button className="btn" style={{ fontSize: 10, padding: '4px 14px' }} onClick={() => doResetPw(u.id)}>Mentés</button>
               <button className="btn btn-ghost" style={{ fontSize: 10, padding: '4px 10px' }}
-                onClick={() => { setResetId(null); setNewPw('') }}>✕</button>
+                onClick={() => { setResetId(null); setNewPw(''); setShowPw(false) }}>✕</button>
             </div>
           )}
         </div>
