@@ -248,9 +248,7 @@ body.cursor-trail .cursor-dot { display: block; }
   line-height: 1.3;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .logo-3d-cube { animation: none !important; transform: rotateX(15deg) rotateY(-25deg) rotateZ(5deg) !important; }
-}
+.logo-3d-cube { animation: logo-spin 16s ease-in-out infinite !important; }
 
 /* 3D LOGO CUBE END */
 

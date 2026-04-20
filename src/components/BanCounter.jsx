@@ -1,13 +1,28 @@
 import { useState, useEffect, useRef } from 'react'
 import { daysSince, BAN_EPOCH_ISO } from '../data.js'
 
-function isBudapestMidnight() {
-  const parts = new Intl.DateTimeFormat('hu-HU', {
+const LS_KEY = 'befosas_counter'
+
+function getBudapestDateStr() {
+  return new Intl.DateTimeFormat('hu-HU', {
     timeZone: 'Europe/Budapest',
-    hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false,
-  }).formatToParts(new Date())
-  const get = (t) => parseInt(parts.find(p => p.type === t)?.value ?? '0')
-  return get('hour') === 0 && get('minute') === 0 && get('second') < 5
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
+}
+
+function loadCount() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    if (!raw) return 0
+    const { date, count } = JSON.parse(raw)
+    return date === getBudapestDateStr() ? count : 0
+  } catch { return 0 }
+}
+
+function saveCount(n) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({ date: getBudapestDateStr(), count: n }))
+  } catch {}
 }
 
 function FlipDigit({ char }) {
@@ -24,13 +39,7 @@ function FlipDigit({ char }) {
   }, [char])
 
   return (
-    <span
-      className={flip ? 'flip-digit flipping' : 'flip-digit'}
-      style={{
-        display: 'inline-block',
-        minWidth: char === ' ' ? 4 : char === '\u00a0' ? 4 : undefined,
-      }}
-    >
+    <span className={flip ? 'flip-digit flipping' : 'flip-digit'} style={{ display: 'inline-block' }}>
       {char}
     </span>
   )
@@ -46,26 +55,34 @@ function FlipNumber({ value }) {
 }
 
 export default function BanCounter() {
-  const [count, setCount] = useState(0)
-  const countRef = useRef(0)
+  const [count, setCount] = useState(() => loadCount())
+  const countRef = useRef(loadCount())
 
   useEffect(() => {
     let timeoutId
 
     const tick = () => {
-      if (isBudapestMidnight()) {
-        countRef.current = 0
-        setCount(0)
-      } else {
-        const inc = Math.random() < 0.5 ? 1 : 2
-        countRef.current += inc
-        setCount(countRef.current)
-      }
-      const nextDelay = 60_000 + Math.random() * 7_140_000
+      const today = getBudapestDateStr()
+      let stored = { date: today, count: countRef.current }
+      try {
+        const raw = localStorage.getItem(LS_KEY)
+        if (raw) stored = JSON.parse(raw)
+      } catch {}
+
+      const currentCount = stored.date === today ? stored.count : 0
+      const inc = Math.random() < 0.5 ? 1 : 2
+      const next = currentCount + inc
+      countRef.current = next
+      saveCount(next)
+      setCount(next)
+
+      // 1 perc – 30 perc között random
+      const nextDelay = 60_000 + Math.random() * 1_740_000
       timeoutId = setTimeout(tick, nextDelay)
     }
 
-    timeoutId = setTimeout(tick, 60_000 + Math.random() * 7_140_000)
+    // első tick is 1–30 perc után
+    timeoutId = setTimeout(tick, 60_000 + Math.random() * 1_740_000)
     return () => clearTimeout(timeoutId)
   }, [])
 
