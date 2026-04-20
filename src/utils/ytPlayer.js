@@ -11,7 +11,7 @@ export function ensureYTScript() {
 }
 
 export function onYTReady(cb) {
-  if (_ready && window.YT?.Player) { cb(); return }
+  if (window.YT?.Player) { cb(); return }
   _queue.push(cb)
 }
 
@@ -20,7 +20,7 @@ if (typeof window !== 'undefined') {
   window.onYouTubeIframeAPIReady = () => {
     if (prev) prev()
     _ready = true
-    _queue.splice(0).forEach(fn => fn())
+    _queue.splice(0).forEach(fn => { try { fn() } catch {} })
   }
 }
 
