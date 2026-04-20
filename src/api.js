@@ -78,6 +78,36 @@ export async function tryRestoreSession() {
   }
 }
 
+// ── Response mappers (snake_case → camelCase + timestamp normalisation) ───────
+function mapPost(raw) {
+  return {
+    ...raw,
+    createdAt:    raw.created_at    ? new Date(raw.created_at).getTime()    : (raw.createdAt    ?? 0),
+    mediaType:    raw.media_type    ?? raw.mediaType    ?? 'none',
+    mediaSrc:     raw.media_src     ?? raw.mediaSrc     ?? null,
+    mediaLabel:   raw.media_label   ?? raw.mediaLabel   ?? null,
+    authorRole:   raw.author_role   ?? raw.authorRole   ?? null,
+    commentCount: raw.comment_count ?? raw.commentCount ?? 0,
+    myReactions:  raw.my_reactions  ?? raw.myReactions  ?? [],
+  }
+}
+
+function mapComment(raw) {
+  return {
+    ...raw,
+    createdAt:    raw.created_at ? new Date(raw.created_at).getTime() : (raw.createdAt ?? 0),
+    authorIsAdmin: raw.author_is_admin
+      ?? raw.authorIsAdmin
+      ?? (raw.author_role ? raw.author_role !== 'user' : false),
+    myReactions:  raw.my_reactions ?? raw.myReactions ?? [],
+    replies:      (raw.replies || []).map(mapComment),
+  }
+}
+
+function mapReactResult(raw) {
+  return { reactions: raw.reactions ?? {}, myReactions: raw.my_reactions ?? raw.myReactions ?? [] }
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const authApi = {
   login: (username, password) =>
@@ -91,29 +121,29 @@ export const authApi = {
 // ── Posts ─────────────────────────────────────────────────────────────────────
 export const postsApi = {
   list: (category) =>
-    req(`/posts${category && category !== 'all' ? `?category=${encodeURIComponent(category)}` : ''}`),
+    req(`/posts${category && category !== 'all' ? `?category=${encodeURIComponent(category)}` : ''}`).then(d => d.map(mapPost)),
   create: (data) =>
-    req('/posts', { method: 'POST', body: data }),
+    req('/posts', { method: 'POST', body: data }).then(mapPost),
   delete: (id) =>
     req(`/posts/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   reorder: (order) =>
     req('/posts/order', { method: 'PUT', body: { order } }),
   react: (postId, key) =>
-    req(`/posts/${encodeURIComponent(postId)}/react`, { method: 'POST', body: { key } }),
+    req(`/posts/${encodeURIComponent(postId)}/react`, { method: 'POST', body: { key } }).then(mapReactResult),
 }
 
 // ── Comments ──────────────────────────────────────────────────────────────────
 export const commentsApi = {
   list: (postId) =>
-    req(`/posts/${encodeURIComponent(postId)}/comments`),
+    req(`/posts/${encodeURIComponent(postId)}/comments`).then(d => d.map(mapComment)),
   add: (postId, text) =>
-    req(`/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: { text } }),
+    req(`/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: { text } }).then(mapComment),
   reply: (commentId, text) =>
-    req(`/comments/${encodeURIComponent(commentId)}/reply`, { method: 'POST', body: { text } }),
+    req(`/comments/${encodeURIComponent(commentId)}/reply`, { method: 'POST', body: { text } }).then(mapComment),
   delete: (commentId) =>
     req(`/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' }),
   react: (commentId, emoji) =>
-    req(`/comments/${encodeURIComponent(commentId)}/react`, { method: 'POST', body: { emoji } }),
+    req(`/comments/${encodeURIComponent(commentId)}/react`, { method: 'POST', body: { emoji } }).then(mapReactResult),
 }
 
 // ── File upload ───────────────────────────────────────────────────────────────
