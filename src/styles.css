@@ -1180,19 +1180,39 @@ body.cursor-trail .cursor-dot { display: block; }
   position: relative; z-index: 2;
   display: flex; flex-direction: column; align-items: center; gap: 32px;
 }
-.tisza-logo-wrap {
-  animation: tiszaLogoSpin 2.5s linear infinite;
+.tisza-scene {
+  width: 280px; height: 140px;
+  perspective: 700px;
+  perspective-origin: 50% 50%;
 }
-@keyframes tiszaLogoSpin {
-  0%   { transform: perspective(800px) rotateX(12deg) rotateY(0deg); }
-  100% { transform: perspective(800px) rotateX(12deg) rotateY(360deg); }
+.tisza-box {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  animation: tiszaBoxSpin 3s linear infinite;
+  will-change: transform;
 }
-.tisza-logo-img {
-  width: 300px;
-  max-width: 80vw;
-  display: block;
-  filter: drop-shadow(0 0 24px #9dff00) brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(60deg);
+@keyframes tiszaBoxSpin {
+  from { transform: rotateX(15deg) rotateY(0deg); }
+  to   { transform: rotateX(15deg) rotateY(360deg); }
 }
+.tisza-face {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.tisza-face img {
+  width: 88%; object-fit: contain;
+  filter: drop-shadow(0 0 14px #9dff00) brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(60deg);
+}
+.tisza-face-front  { transform: translateZ(40px); background: rgba(0,0,0,0.9); }
+.tisza-face-back   { transform: rotateY(180deg) translateZ(40px); background: rgba(0,0,0,0.9); }
+.tisza-face-right  { transform: rotateY(90deg)  translateZ(40px); background: rgba(157,255,0,0.65); }
+.tisza-face-left   { transform: rotateY(-90deg) translateZ(40px); background: rgba(157,255,0,0.65); }
+.tisza-face-top    { transform: rotateX(90deg)  translateZ(40px); background: rgba(157,255,0,0.35); }
+.tisza-face-bottom { transform: rotateX(-90deg) translateZ(40px); background: rgba(157,255,0,0.35); }
 
 /* ── INSTAGRAM BUTTON ────────────────────────────────────────────────────── */
 .instagram-btn:hover {

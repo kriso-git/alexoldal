@@ -33,7 +33,7 @@ export default function App() {
   const [dragId, setDragId] = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
   const [superadminOpen, setSuperadminOpen] = useState(false)
-  const [showTiszaIntro, setShowTiszaIntro] = useState(() => !sessionStorage.getItem('tisza_intro_shown'))
+  const [showTiszaIntro, setShowTiszaIntro] = useState(true)
   const feedRef = useRef(null)
 
   const [tweaks, setTweaks] = useState(() => {
@@ -75,14 +75,30 @@ export default function App() {
 
     installKonami(() => { konamiCelebrate(); toast('↑↑↓↓←→←→BA — acid mode') })
 
+    const saveScroll = () => sessionStorage.setItem('f3xykee_scrollY', String(window.scrollY))
+    window.addEventListener('beforeunload', saveScroll)
+
     const handler = (e) => {
       if (e.data?.type === '__activate_edit_mode') setTweaksOpen(true)
       if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false)
     }
     window.addEventListener('message', handler)
     try { window.parent?.postMessage({ type: '__edit_mode_available' }, '*') } catch {}
-    return () => window.removeEventListener('message', handler)
+    return () => {
+      window.removeEventListener('beforeunload', saveScroll)
+      window.removeEventListener('message', handler)
+    }
   }, [])
+
+  // Restore scroll position after posts are loaded
+  useEffect(() => {
+    if (loading) return
+    const savedY = sessionStorage.getItem('f3xykee_scrollY')
+    if (savedY) {
+      sessionStorage.removeItem('f3xykee_scrollY')
+      setTimeout(() => window.scrollTo(0, parseInt(savedY)), 150)
+    }
+  }, [loading])
 
   // Re-fetch posts when session changes (to get updated myReactions)
   useEffect(() => {
@@ -329,10 +345,7 @@ export default function App() {
   return (
     <>
       {showTiszaIntro && (
-        <TiszaIntro onDone={() => {
-          sessionStorage.setItem('tisza_intro_shown', '1')
-          setShowTiszaIntro(false)
-        }} />
+        <TiszaIntro onDone={() => setShowTiszaIntro(false)} />
       )}
       <div className="app">
         <Sidebar
