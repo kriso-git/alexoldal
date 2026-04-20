@@ -9,6 +9,7 @@ import TweaksPanel, { ACCENTS } from './components/TweaksPanel.jsx'
 import PostCard from './posts/PostCard.jsx'
 import Composer from './posts/Composer.jsx'
 import SuperAdmin from './SuperAdmin.jsx'
+import TiszaIntro from './components/TiszaIntro.jsx'
 import {
   setAccessToken, clearAccessToken, setUnauthCallback,
   tryRestoreSession, authApi, postsApi, commentsApi,
@@ -32,6 +33,7 @@ export default function App() {
   const [dragId, setDragId] = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
   const [superadminOpen, setSuperadminOpen] = useState(false)
+  const [showTiszaIntro, setShowTiszaIntro] = useState(() => !sessionStorage.getItem('tisza_intro_shown'))
   const feedRef = useRef(null)
 
   const [tweaks, setTweaks] = useState(() => {
@@ -326,6 +328,12 @@ export default function App() {
 
   return (
     <>
+      {showTiszaIntro && (
+        <TiszaIntro onDone={() => {
+          sessionStorage.setItem('tisza_intro_shown', '1')
+          setShowTiszaIntro(false)
+        }} />
+      )}
       <div className="app">
         <Sidebar
           session={session}

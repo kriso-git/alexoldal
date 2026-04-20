@@ -189,6 +189,13 @@ export const songsApi = {
   delete: (id) => req(`/superadmin/songs/${id}`, { method: 'DELETE' }),
 }
 
+// ── Custom Emojis ─────────────────────────────────────────────────────────────
+export const customEmojiApi = {
+  list: () => req('/custom-emojis'),
+  add: (name, url) => req('/superadmin/custom-emojis', { method: 'POST', body: { name, url } }),
+  delete: (id) => req(`/superadmin/custom-emojis/${id}`, { method: 'DELETE' }),
+}
+
 // ── Visits ────────────────────────────────────────────────────────────────────
 export const visitsApi = {
   increment: () => req('/visit', { method: 'POST' }),

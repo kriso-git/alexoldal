@@ -12,6 +12,8 @@
     { "source": "/api/superadmin/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/superadmin/:path*" },
     { "source": "/api/songs/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/songs/:path*" },
     { "source": "/api/songs", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/songs" },
-    { "source": "/api/visit", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/visit" }
+    { "source": "/api/visit", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/visit" },
+    { "source": "/api/custom-emojis", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/custom-emojis" },
+    { "source": "/api/superadmin/custom-emojis/:path*", "destination": "https://gsywzwpahxbxvccqvapm.supabase.co/functions/v1/custom-emojis/:path*" }
   ]
 }

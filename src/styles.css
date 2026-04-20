@@ -1161,3 +1161,130 @@ body.cursor-trail .cursor-dot { display: block; }
   border-radius: 50%; background: var(--accent); cursor: pointer;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── TISZA INTRO OVERLAY ─────────────────────────────────────────────────── */
+.tisza-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8,8,8,0.97);
+  cursor: pointer;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  opacity: 1;
+}
+.tisza-overlay.fading { opacity: 0; transform: scale(1.04); pointer-events: none; }
+.tisza-scanlines {
+  position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px);
+  z-index: 1;
+}
+.tisza-inner {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+.tisza-logo-wrap {
+  perspective: 700px;
+  display: flex; align-items: center; justify-content: center;
+}
+.tisza-logo-img {
+  width: 220px; height: auto;
+  filter: drop-shadow(0 0 22px #9dff00) brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(60deg);
+  animation: tiszaSpin 2.5s linear infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+@keyframes tiszaSpin {
+  0%   { transform: perspective(700px) rotateY(0deg)   rotateX(8deg); }
+  50%  { transform: perspective(700px) rotateY(180deg) rotateX(-8deg); }
+  100% { transform: perspective(700px) rotateY(360deg) rotateX(8deg); }
+}
+.tisza-label {
+  font-family: 'VT323', monospace; font-size: 40px; letter-spacing: 0.5em;
+  color: var(--accent); text-shadow: 0 0 18px var(--accent);
+  text-indent: 0.5em;
+}
+.tisza-cursor {
+  animation: blinkCursor 1s step-end infinite;
+}
+@keyframes blinkCursor { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+.tisza-hint {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+  color: var(--text-faint); opacity: 0.6;
+}
+
+/* ── INSTAGRAM BUTTON ────────────────────────────────────────────────────── */
+.instagram-btn:hover {
+  background: linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 0 14px rgba(220,39,67,0.45) !important;
+}
+
+/* ── COMMENT IMAGE ATTACHMENT ────────────────────────────────────────────── */
+.comment-attach-btn {
+  background: none; border: none; padding: 0 4px; cursor: pointer;
+  color: var(--text-dim); font-size: 13px; line-height: 1;
+  transition: color 0.15s;
+}
+.comment-attach-btn:hover { color: var(--accent); }
+.comment-image-preview {
+  position: relative; display: inline-block; margin-top: 6px;
+}
+.comment-image-preview img {
+  max-width: 200px; max-height: 140px; border-radius: 4px;
+  border: 1px solid var(--border); display: block;
+}
+.comment-image-preview-remove {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--danger); color: #fff; border: none; cursor: pointer;
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.comment-img {
+  max-width: 100%; border-radius: 4px; margin-top: 6px; display: block; cursor: pointer;
+  border: 1px solid var(--border);
+}
+.emoji-inline {
+  width: 20px; height: 20px; vertical-align: middle;
+  display: inline-block; object-fit: contain; margin: 0 2px;
+}
+.comment-form-row {
+  display: flex; align-items: center; gap: 4px; width: 100%;
+}
+
+/* ── SUPERADMIN EMOJIK TAB ───────────────────────────────────────────────── */
+.emoji-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px; margin-bottom: 20px;
+}
+.emoji-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--surface);
+}
+.emoji-card img { width: 40px; height: 40px; object-fit: contain; border-radius: 3px; }
+.emoji-card-name {
+  font-size: 9px; font-family: var(--font-mono); color: var(--text-dim);
+  word-break: break-all; text-align: center;
+}
+.emoji-card-del {
+  background: none; border: none; cursor: pointer;
+  color: var(--danger); font-size: 10px; padding: 0;
+}
+.emoji-card-del:hover { opacity: 0.7; }
+.emoji-upload-row {
+  display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;
+  padding: 12px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--surface); margin-bottom: 16px;
+}
+.emoji-upload-row input[type="text"] { flex: 1; min-width: 120px; }
+
+/* ── YOUTUBE QUALITY SELECTOR ────────────────────────────────────────────── */
+.yt-quality-select {
+  -webkit-appearance: none; appearance: none;
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font-mono); font-size: 10px; border-radius: 3px;
+  padding: 2px 4px; cursor: pointer; width: 68px;
+  transition: border-color 0.15s;
+}
+.yt-quality-select:hover, .yt-quality-select:focus { border-color: var(--accent); outline: none; }

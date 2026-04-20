@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { formatDateHu, timeAgoHu, catLabel } from '../data.js'
 import { toast } from '../effects.js'
-import { commentsApi } from '../api.js'
+import { commentsApi, uploadFile } from '../api.js'
 import Comment from './Comment.jsx'
 import YouTubePlayer from './YouTubePlayer.jsx'
 import AudioPlayer from './AudioPlayer.jsx'
@@ -24,6 +24,9 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
   const [comments, setComments] = useState(null)
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [pendingImage, setPendingImage] = useState(null)
+  const [imageUploading, setImageUploading] = useState(false)
+  const fileInputRef = useRef(null)
   const mediaRef = useRef(null)
   const isAdmin = session?.role === 'admin' || session?.role === 'superadmin'
   const commentCount = post.commentCount || 0
@@ -43,12 +46,32 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
     }
   }, [post._newComment])
 
+  const handleImagePick = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageUploading(true)
+    try {
+      const data = await uploadFile(file)
+      setPendingImage(data.url)
+    } catch (err) {
+      toast(err.message || 'Feltöltési hiba', 'err')
+    } finally {
+      setImageUploading(false)
+      e.target.value = ''
+    }
+  }
+
   const submitComment = async (e) => {
     e.preventDefault()
-    if (!commentText.trim()) return
+    if (!commentText.trim() && !pendingImage) return
     if (!session) return onOpenAuth('login')
-    const comment = await onComment(post.id, commentText.trim())
-    if (comment) { setComments(prev => prev ? [...prev, comment] : [comment]); setCommentText('') }
+    const text = commentText.trim() + (pendingImage ? `\n[img:${pendingImage}]` : '')
+    const comment = await onComment(post.id, text)
+    if (comment) {
+      setComments(prev => prev ? [...prev, comment] : [comment])
+      setCommentText('')
+      setPendingImage(null)
+    }
   }
 
   const handleDeleteComment = async (postId, commentId) => {
@@ -198,13 +221,41 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
       <div className={`comments${commentsOpen ? ' open' : ''}`}>
         {session ? (
           <form className="comment-form" onSubmit={submitComment}>
-            <input
-              className="comment-input"
-              placeholder={`Írj kommentet ${session.username} néven...`}
-              value={commentText}
-              onChange={e => setCommentText(e.target.value)}
-            />
-            <button type="submit" className="comment-submit">Küld</button>
+            <div className="comment-form-row">
+              <input
+                className="comment-input"
+                placeholder={`Írj kommentet ${session.username} néven...`}
+                value={commentText}
+                onChange={e => setCommentText(e.target.value)}
+              />
+              <button
+                type="button"
+                className="comment-attach-btn"
+                title="Kép / GIF csatolása"
+                disabled={imageUploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {imageUploading ? '…' : '📎'}
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*,.gif"
+                style={{ display: 'none' }}
+                onChange={handleImagePick}
+              />
+              <button type="submit" className="comment-submit">Küld</button>
+            </div>
+            {pendingImage && (
+              <div className="comment-image-preview">
+                <img src={pendingImage} alt="előnézet" />
+                <button
+                  type="button"
+                  className="comment-image-preview-remove"
+                  onClick={() => setPendingImage(null)}
+                >✕</button>
+              </div>
+            )}
           </form>
         ) : (
           <div className="comment-login-nudge">

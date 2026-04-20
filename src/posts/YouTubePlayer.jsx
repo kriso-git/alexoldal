@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { ensureYTScript, onYTReady, extractVideoId, fmtTime } from '../utils/ytPlayer.js'
 
+const Q_LABELS = {
+  hd2160: '4K', hd1440: '1440p', hd1080: '1080p', hd720: '720p',
+  large: '480p', medium: '360p', small: '240p', tiny: '144p', auto: 'Auto',
+}
+
 export default function YouTubePlayer({ src }) {
   const containerRef = useRef(null)
   const playerRef = useRef(null)
@@ -10,6 +15,8 @@ export default function YouTubePlayer({ src }) {
   const [duration, setDuration] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [ready, setReady] = useState(false)
+  const [quality, setQuality] = useState('auto')
+  const [availableQualities, setAvailableQualities] = useState([])
 
   useEffect(() => {
     ensureYTScript()
@@ -31,12 +38,16 @@ export default function YouTubePlayer({ src }) {
             if (destroyed) return
             e.target.setVolume(volume)
             setDuration(e.target.getDuration() || 0)
+            const quals = e.target.getAvailableQualityLevels?.() || []
+            setAvailableQualities(quals)
+            setQuality(e.target.getPlaybackQuality?.() || 'auto')
             setReady(true)
           },
           onStateChange: (e) => {
             const YT = window.YT.PlayerState
             if (e.data === YT.PLAYING) {
               setPlaying(true)
+              setQuality(playerRef.current?.getPlaybackQuality?.() || 'auto')
               timerRef.current = setInterval(() => {
                 const p = playerRef.current
                 if (!p) return
@@ -51,6 +62,9 @@ export default function YouTubePlayer({ src }) {
               }
             }
           },
+          onPlaybackQualityChange: (e) => {
+            setQuality(e.data || 'auto')
+          },
         },
       })
     })
@@ -63,6 +77,7 @@ export default function YouTubePlayer({ src }) {
       setReady(false)
       setPlaying(false)
       setCurrentTime(0)
+      setAvailableQualities([])
     }
   }, [src])
 
@@ -86,6 +101,12 @@ export default function YouTubePlayer({ src }) {
     const t = ratio * duration
     playerRef.current?.seekTo?.(t, true)
     setCurrentTime(t)
+  }
+
+  const handleQualityChange = (e) => {
+    const q = e.target.value
+    playerRef.current?.setPlaybackQuality?.(q)
+    setQuality(q)
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
@@ -118,6 +139,18 @@ export default function YouTubePlayer({ src }) {
           className="yt-volume-slider"
           title={`Hangerő: ${volume}%`}
         />
+        {availableQualities.length > 1 && (
+          <select
+            className="yt-quality-select"
+            value={quality}
+            onChange={handleQualityChange}
+            title="Videóminőség"
+          >
+            {availableQualities.map(q => (
+              <option key={q} value={q}>{Q_LABELS[q] || q}</option>
+            ))}
+          </select>
+        )}
       </div>
     </div>
   )

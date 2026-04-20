@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { superadminApi, songsApi } from './api.js'
+import { superadminApi, songsApi, customEmojiApi, uploadFile } from './api.js'
 import { toast } from './effects.js'
 import { formatDateHu, timeAgoHu } from './data.js'
 
@@ -521,6 +521,100 @@ function MusicTab() {
   )
 }
 
+// ── Emojik tab ────────────────────────────────────────────────────────────────
+function EmojisTab() {
+  const [emojis, setEmojis] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [newName, setNewName] = useState('')
+  const fileInputRef = useRef(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try { setEmojis(await customEmojiApi.list()) }
+    catch { setEmojis([]) }
+    finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const doUpload = async (file) => {
+    if (!file) return
+    const name = newName.trim() || file.name.replace(/\.[^.]+$/, '')
+    setUploading(true)
+    try {
+      const { url } = await uploadFile(file)
+      const emoji = await customEmojiApi.add(name, url)
+      setEmojis(prev => [...prev, emoji])
+      toast(`"${name}" emoji feltöltve`)
+      setNewName('')
+    } catch (e) { toast(e.message || 'Hiba', 'err') }
+    finally { setUploading(false) }
+  }
+
+  const doDelete = async (id, name) => {
+    if (!confirm(`Törlöd: "${name}"?`)) return
+    try {
+      await customEmojiApi.delete(id)
+      setEmojis(prev => prev.filter(e => e.id !== id))
+      toast('Emoji törölve')
+    } catch (e) { toast(e.message || 'Hiba', 'err') }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.1em' }}>
+        Egyedi emojik, amelyek megjelennek a komment reakció-választóban. Támogatott: png, gif, jpg, webp.
+      </div>
+
+      <div className="emoji-upload-row">
+        <input
+          className="form-input"
+          placeholder="Emoji neve (pl. pepehappy)"
+          value={newName}
+          onChange={e => setNewName(e.target.value)}
+          style={{ flex: 1, minWidth: 160 }}
+        />
+        <button
+          className="btn"
+          style={{ fontSize: 11, padding: '6px 14px' }}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? '⏳ Feltöltés...' : '⬆ Emoji feltöltése'}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.gif"
+          style={{ display: 'none' }}
+          onChange={e => doUpload(e.target.files?.[0])}
+        />
+      </div>
+
+      {loading && <div style={{ color: 'var(--text-faint)', fontSize: 12 }}>[ betöltés... ]</div>}
+
+      {!loading && emojis.length === 0 && (
+        <div style={{ color: 'var(--text-faint)', fontSize: 12, textAlign: 'center', padding: 24 }}>
+          [ nincs egyedi emoji — tölts fel egyet ]
+        </div>
+      )}
+
+      {emojis.length > 0 && (
+        <div className="emoji-grid">
+          {emojis.map(e => (
+            <div key={e.id} className="emoji-card">
+              <img src={e.url} alt={e.name} />
+              <div className="emoji-card-name">:{e.name}:</div>
+              <button className="emoji-card-del" onClick={() => doDelete(e.id, e.name)}>🗑 törlés</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main SuperAdmin ───────────────────────────────────────────────────────────
 export default function SuperAdmin({ onClose, session, onLogout }) {
   const [tab, setTab] = useState('users')
@@ -528,6 +622,7 @@ export default function SuperAdmin({ onClose, session, onLogout }) {
     { id: 'users', label: '👥 Felhasználók' },
     { id: 'audit', label: '📋 Audit log' },
     { id: 'music', label: '🎵 Zene' },
+    { id: 'emojis', label: '🎨 Emojik' },
     { id: 'stats', label: '📊 Statisztika' },
   ]
 
@@ -566,6 +661,7 @@ export default function SuperAdmin({ onClose, session, onLogout }) {
         {tab === 'users' && <UsersTab currentUserId={session?.id} />}
         {tab === 'audit' && <AuditTab />}
         {tab === 'music' && <MusicTab />}
+        {tab === 'emojis' && <EmojisTab />}
         {tab === 'stats' && <StatsTab />}
       </div>
     </div>
