@@ -150,8 +150,7 @@ export function playBoot(onDone) {
       const cur = document.createElement("span");
       cur.className = "crt-cursor";
       wrap.appendChild(cur);
-      setTimeout(finish, 600);
-      return;
+      return; // wait for user keydown/click (skip handlers below)
     }
     const { t, c } = BOOT_LINES[i++];
     const line = document.createElement("div");
