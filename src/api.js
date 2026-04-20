@@ -136,9 +136,9 @@ export const postsApi = {
 // ── Comments ──────────────────────────────────────────────────────────────────
 export const commentsApi = {
   list: (postId) =>
-    req(`/posts/${encodeURIComponent(postId)}/comments`).then(d => d.map(mapComment)),
+    req(`/comments/posts/${encodeURIComponent(postId)}/comments`).then(d => d.map(mapComment)),
   add: (postId, text) =>
-    req(`/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: { text } }).then(mapComment),
+    req(`/comments/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: { text } }).then(mapComment),
   reply: (commentId, text) =>
     req(`/comments/${encodeURIComponent(commentId)}/reply`, { method: 'POST', body: { text } }).then(mapComment),
   delete: (commentId) =>

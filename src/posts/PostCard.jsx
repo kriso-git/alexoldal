@@ -23,6 +23,7 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
   const [commentText, setCommentText] = useState('')
   const [comments, setComments] = useState(null)
   const [commentsLoading, setCommentsLoading] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const mediaRef = useRef(null)
   const isAdmin = session?.role === 'admin' || session?.role === 'superadmin'
   const commentCount = post.commentCount || 0
@@ -162,10 +163,32 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
           <button className="icon-btn" onClick={() => setCommentsOpen(o => !o)}>
             💬 {commentCount} {commentsOpen ? 'elrejt' : 'komment'}
           </button>
-          <button className="icon-btn" onClick={() => {
-            navigator.clipboard?.writeText(`${window.location.origin}/#${post.id}`)
-            toast('Link másolva')
-          }}>↗ Megoszt</button>
+          <div style={{ position: 'relative' }}>
+            <button className="icon-btn" onClick={() => {
+              const url = `${window.location.origin}/#${post.id}`
+              navigator.clipboard?.writeText(url)
+              setShareOpen(o => !o)
+            }}>↗ Megoszt</button>
+            {shareOpen && (
+              <div style={{
+                position: 'absolute', bottom: '110%', right: 0, zIndex: 50,
+                background: 'var(--bg-2)', border: '1px solid var(--border-strong)',
+                borderRadius: 6, padding: '10px 12px', minWidth: 260, maxWidth: 340,
+                boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
+              }}>
+                <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.1em', marginBottom: 4 }}>LINK MÁSOLVA</div>
+                <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>{post.title}</div>
+                <div style={{
+                  fontSize: 9, color: 'var(--accent)', fontFamily: 'var(--font-mono)',
+                  wordBreak: 'break-all', opacity: 0.8,
+                }}>{window.location.origin}/#{ post.id}</div>
+                <button
+                  style={{ marginTop: 8, fontSize: 9, background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0, letterSpacing: '0.08em' }}
+                  onClick={() => setShareOpen(false)}
+                >[ bezár ]</button>
+              </div>
+            )}
+          </div>
           {isAdmin && (
             <button className="icon-btn danger" onClick={() => onDeletePost(post.id)}>🗑 Töröl</button>
           )}
