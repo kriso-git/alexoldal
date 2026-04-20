@@ -389,6 +389,8 @@ function MusicTab() {
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [editName, setEditName] = useState('')
+  const [renamingId, setRenamingId] = useState(null)
+  const [renamingVal, setRenamingVal] = useState('')
   const fileInputRef = useRef(null)
 
   const load = useCallback(async () => {
@@ -419,6 +421,19 @@ function MusicTab() {
       await songsApi.delete(id)
       setSongs(prev => prev.filter(s => s.id !== id))
       toast('Zene törölve')
+    } catch (e) { toast(e.message, 'err') }
+  }
+
+  const startRename = (s) => { setRenamingId(s.id); setRenamingVal(s.name) }
+  const cancelRename = () => { setRenamingId(null); setRenamingVal('') }
+  const saveRename = async (id) => {
+    const name = renamingVal.trim()
+    if (!name) return
+    try {
+      await songsApi.rename(id, name)
+      setSongs(prev => prev.map(s => s.id === id ? { ...s, name } : s))
+      toast('Név mentve')
+      cancelRename()
     } catch (e) { toast(e.message, 'err') }
   }
 
@@ -460,11 +475,32 @@ function MusicTab() {
       {loading && <div style={{ color: 'var(--text-faint)', fontSize: 12 }}>[ betöltés... ]</div>}
 
       {songs.map((s, i) => (
-        <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid var(--border)', background: 'var(--bg-1)' }}>
+        <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: '1px solid var(--border)', background: 'var(--bg-1)', flexWrap: 'wrap' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-faint)', minWidth: 24 }}>
             {String(i + 1).padStart(2, '0')}
           </span>
-          <span style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12 }}>{s.name}</span>
+
+          {renamingId === s.id ? (
+            <>
+              <input
+                className="form-input"
+                value={renamingVal}
+                onChange={e => setRenamingVal(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') saveRename(s.id); if (e.key === 'Escape') cancelRename() }}
+                style={{ flex: 1, fontSize: 12, padding: '3px 8px', minWidth: 140 }}
+                autoFocus
+              />
+              <button className="btn" style={{ fontSize: 10, padding: '3px 10px' }} onClick={() => saveRename(s.id)}>✓</button>
+              <button className="btn btn-ghost" style={{ fontSize: 10, padding: '3px 8px' }} onClick={cancelRename}>✕</button>
+            </>
+          ) : (
+            <>
+              <span style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12 }}>{s.name}</span>
+              <button className="btn btn-ghost" style={{ fontSize: 10, padding: '3px 8px' }} onClick={() => startRename(s)}
+                title="Átnevezés">✏</button>
+            </>
+          )}
+
           <audio controls src={s.url} style={{ height: 28, flex: 1, maxWidth: 260 }} />
           <button className="btn btn-danger" style={{ fontSize: 10, padding: '3px 8px' }}
             onClick={() => deleteSong(s.id, s.name)}>🗑</button>

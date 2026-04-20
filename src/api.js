@@ -83,6 +83,7 @@ function mapPost(raw) {
   return {
     ...raw,
     createdAt:    raw.created_at    ? new Date(raw.created_at).getTime()    : (raw.createdAt    ?? 0),
+    author:       raw.author        ?? raw.author_username ?? raw.username  ?? '',
     mediaType:    raw.media_type    ?? raw.mediaType    ?? 'none',
     mediaSrc:     raw.media_src     ?? raw.mediaSrc     ?? null,
     mediaLabel:   raw.media_label   ?? raw.mediaLabel   ?? null,
@@ -184,6 +185,7 @@ export const songsApi = {
       xhr.send(form)
     })
   },
+  rename: (id, name) => req(`/superadmin/songs/${id}`, { method: 'PATCH', body: { name } }),
   delete: (id) => req(`/superadmin/songs/${id}`, { method: 'DELETE' }),
 }
 
