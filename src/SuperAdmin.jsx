@@ -521,6 +521,33 @@ function MusicTab() {
   )
 }
 
+async function optimizeEmoji(file) {
+  if (file.type === 'image/gif') return file
+  return new Promise((resolve) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      const MAX = 128
+      let { width, height } = img
+      if (width > MAX || height > MAX) {
+        if (width >= height) { height = Math.round(height * MAX / width); width = MAX }
+        else { width = Math.round(width * MAX / height); height = MAX }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      URL.revokeObjectURL(objectUrl)
+      canvas.toBlob(
+        (blob) => resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.png'), { type: 'image/png' })),
+        'image/png'
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file) }
+    img.src = objectUrl
+  })
+}
+
 // ── Emojik tab ────────────────────────────────────────────────────────────────
 function EmojisTab() {
   const [emojis, setEmojis] = useState([])
@@ -543,7 +570,8 @@ function EmojisTab() {
     const name = newName.trim() || file.name.replace(/\.[^.]+$/, '')
     setUploading(true)
     try {
-      const { url } = await uploadFile(file)
+      const optimized = await optimizeEmoji(file)
+      const { url } = await uploadFile(optimized)
       const emoji = await customEmojiApi.add(name, url)
       setEmojis(prev => [...prev, emoji])
       toast(`"${name}" emoji feltöltve`)
