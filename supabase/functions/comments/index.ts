@@ -68,7 +68,7 @@ serve(async (req) => {
         username: u.username as string,
         role: u.role as string,
         xp: (u.xp as number) ?? 0,
-        avatar_url: u.avatar_url as string | null ?? null,
+        avatar_url: (u.avatar_url as (string | null)) ?? null,
       }]))
 
     const ids = allComments.map((c: Record<string,unknown>) => c.id)
