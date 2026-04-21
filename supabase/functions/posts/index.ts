@@ -205,7 +205,13 @@ serve(async (req) => {
     } else {
       await db.from("post_reactions").insert({ post_id: postId, user_id: user.id, reaction_key: k, created_at: Date.now() })
       if (Number(p.author_id) !== user.id) await awardXp(db, Number(p.author_id), 5)
-      reactorXp = await awardXp(db, user.id, 2)
+      // XP csak egyszer adható per user per poszt (farming védelem)
+      const { data: xpLog } = await db.from("reaction_xp_log")
+        .select("user_id").eq("user_id", user.id).eq("post_id", postId).maybeSingle()
+      if (!xpLog) {
+        await db.from("reaction_xp_log").insert({ user_id: user.id, post_id: postId, created_at: Date.now() })
+        reactorXp = await awardXp(db, user.id, 2)
+      }
     }
 
     const { data: allR } = await db.from("post_reactions").select("reaction_key").eq("post_id", postId)

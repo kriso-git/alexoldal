@@ -51,13 +51,14 @@ serve(async (req) => {
   // GET — üzenetek listája
   if (req.method === "GET") {
     const { data, error } = await db.from("profile_wall")
-      .select("id, author_username, author_level, text, created_at")
+      .select("id, author_username, author_level, text, media_url, created_at")
       .eq("profile_username", profileUsername)
       .order("created_at", { ascending: false }).limit(100)
     if (error) return json({ error: error.message }, 500)
     return json((data ?? []).map(m => ({
       id: m.id, author: m.author_username, level: m.author_level,
-      text: m.text, createdAt: new Date(m.created_at).getTime(),
+      text: m.text, media_url: m.media_url ?? null,
+      createdAt: new Date(m.created_at).getTime(),
     })))
   }
 
@@ -66,7 +67,9 @@ serve(async (req) => {
     if (!user) return json({ error: "Belépés szükséges" }, 401)
     const body = await req.json().catch(() => ({}))
     const t = String(body.text ?? "").trim()
-    if (!t || t.length > 500) return json({ error: "Érvénytelen szöveg" }, 400)
+    const media_url = body.media_url ? String(body.media_url).trim() : null
+    if (!t && !media_url) return json({ error: "Szöveg vagy kép szükséges" }, 400)
+    if (t.length > 500) return json({ error: "Érvénytelen szöveg" }, 400)
 
     const { data: u } = await db.from("users").select("xp").eq("id", user.id).single()
     const { data: msg, error } = await db.from("profile_wall").insert({
@@ -75,6 +78,7 @@ serve(async (req) => {
       author_username:  user.username,
       author_level:     getLevel(u?.xp ?? 0),
       text: t,
+      media_url,
     }).select().single()
     if (error) return json({ error: error.message }, 500)
 
@@ -86,7 +90,8 @@ serve(async (req) => {
 
     return json({
       id: msg.id, author: msg.author_username, level: msg.author_level,
-      text: msg.text, createdAt: new Date(msg.created_at).getTime(),
+      text: msg.text, media_url: msg.media_url ?? null,
+      createdAt: new Date(msg.created_at).getTime(),
       user_xp: newXp,
     })
   }

@@ -211,7 +211,7 @@ export const profileApi = {
 
 export const profileWallApi = {
   list: (username) => req(`/profile-wall/${encodeURIComponent(username)}`),
-  post: (username, text) => req(`/profile-wall/${encodeURIComponent(username)}`, { method: 'POST', body: { text } }),
+  post: (username, text, media_url = null) => req(`/profile-wall/${encodeURIComponent(username)}`, { method: 'POST', body: { text, ...(media_url ? { media_url } : {}) } }),
   delete: (username, id) => req(`/profile-wall/${encodeURIComponent(username)}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 }
 

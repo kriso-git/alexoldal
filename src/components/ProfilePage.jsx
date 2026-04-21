@@ -24,6 +24,9 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
   const [loading, setLoading] = useState(true)
   const [wallText, setWallText] = useState('')
   const [wallPosting, setWallPosting] = useState(false)
+  const [wallMediaUrl, setWallMediaUrl] = useState(null)
+  const [wallMediaUploading, setWallMediaUploading] = useState(false)
+  const wallMediaInputRef = useRef(null)
   const [savingUsername, setSavingUsername] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -124,15 +127,32 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
     }
   }
 
+  const handleWallMediaChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { toast('Csak kép fájl fogadható el', 'err'); return }
+    setWallMediaUploading(true)
+    try {
+      const { url } = await uploadFile(file)
+      setWallMediaUrl(url)
+    } catch (err) {
+      toast(err.message, 'err')
+    } finally {
+      setWallMediaUploading(false)
+      e.target.value = ''
+    }
+  }
+
   const handleWallPost = async (e) => {
     e.preventDefault()
-    if (!wallText.trim()) return
+    if (!wallText.trim() && !wallMediaUrl) return
     if (!session) { toast('Belépés szükséges', 'err'); return }
     setWallPosting(true)
     try {
-      const msg = await profileWallApi.post(username, wallText.trim())
+      const msg = await profileWallApi.post(username, wallText.trim(), wallMediaUrl)
       setWall(prev => [msg, ...prev])
       setWallText('')
+      setWallMediaUrl(null)
       if (msg.user_xp !== undefined) onSessionUpdate?.({ xp: msg.user_xp })
     } catch (e) {
       toast(e.message, 'err')
@@ -316,14 +336,34 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
         <div className="profile-wall-title">Profil fal</div>
         {session ? (
           <form className="wall-form" onSubmit={handleWallPost}>
-            <input
-              className="wall-input"
-              placeholder={`Írj üzenetet @${profile.username} falára...`}
-              value={wallText}
-              onChange={e => setWallText(e.target.value)}
-              maxLength={500}
-            />
-            <button type="submit" className="btn" disabled={wallPosting || !wallText.trim()}>Küld</button>
+            <div style={{ display: 'flex', gap: 6, width: '100%' }}>
+              <input
+                className="wall-input"
+                placeholder={`Írj üzenetet @${profile.username} falára...`}
+                value={wallText}
+                onChange={e => setWallText(e.target.value)}
+                maxLength={500}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="btn btn-ghost"
+                title="Kép csatolása"
+                disabled={wallMediaUploading}
+                onClick={() => wallMediaInputRef.current?.click()}
+                style={{ flexShrink: 0, fontSize: 14, padding: '0 10px' }}
+              >
+                {wallMediaUploading ? '…' : '🖼'}
+              </button>
+              <input type="file" ref={wallMediaInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleWallMediaChange} />
+              <button type="submit" className="btn" disabled={wallPosting || (!wallText.trim() && !wallMediaUrl)} style={{ flexShrink: 0 }}>Küld</button>
+            </div>
+            {wallMediaUrl && (
+              <div style={{ position: 'relative', marginTop: 6 }}>
+                <img src={wallMediaUrl} alt="preview" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', background: 'var(--bg-0)', border: '1px solid var(--border)' }} />
+                <button type="button" onClick={() => setWallMediaUrl(null)} style={{ position: 'absolute', top: 4, right: 4, background: 'var(--bg-1)', border: '1px solid var(--border)', color: 'var(--text-dim)', cursor: 'pointer', fontSize: 11, padding: '2px 6px' }}>✕</button>
+              </div>
+            )}
           </form>
         ) : (
           <div style={{ fontSize: 11, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)', marginBottom: 12 }}>
@@ -349,7 +389,10 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
                   <button className="wall-msg-del" onClick={() => handleWallDelete(msg.id)}>✕</button>
                 )}
               </div>
-              <div className="wall-msg-text">{msg.text}</div>
+              {msg.text && <div className="wall-msg-text">{msg.text}</div>}
+              {msg.media_url && (
+                <img src={msg.media_url} alt="" style={{ width: '100%', maxHeight: 400, objectFit: 'contain', background: 'var(--bg-0)', border: '1px solid var(--border)', marginTop: msg.text ? 6 : 0, display: 'block' }} />
+              )}
             </div>
           )
         })}
