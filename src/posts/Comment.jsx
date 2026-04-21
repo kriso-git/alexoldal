@@ -6,7 +6,9 @@ import { uploadFile, customEmojiApi } from '../api.js'
 const EMOJI_SET = ['👍','❤️','🔥','😂','😮','😢','💀','👀','🙏','🎉','💯','🤡']
 
 let _customEmojisCache = null
-function useCustomEmojis() {
+export function clearCustomEmojiCache() { _customEmojisCache = null }
+
+export function useCustomEmojis() {
   const [emojis, setEmojis] = useState(_customEmojisCache || [])
   useEffect(() => {
     if (_customEmojisCache) return
@@ -37,6 +39,11 @@ function renderCommentText(text) {
   }
   if (last < text.length) parts.push(text.slice(last))
   return parts
+}
+
+function ReactionIcon({ em }) {
+  if (em.startsWith('http')) return <img src={em} alt="" style={{ width: 16, height: 16, objectFit: 'contain', verticalAlign: 'middle' }} />
+  return <span>{em}</span>
 }
 
 export default function Comment({ c, session, isReply, onReply, onReact, onOpenAuth, onDelete, isAdmin }) {
@@ -87,7 +94,10 @@ export default function Comment({ c, session, isReply, onReply, onReact, onOpenA
     <>
       <div className={`comment${isReply ? ' is-reply' : ''}`}>
         <div className="comment-head">
-          <span className={`comment-author${c.authorIsAdmin ? ' admin-author' : ''}`}>{c.author}</span>
+          <span className={`comment-author${c.authorIsAdmin ? ' admin-author' : ''}`}>
+            {c.author}
+            {c.level > 1 && <span className="level-badge">LV.{c.level}</span>}
+          </span>
           <span className="comment-time" title={formatDateHu(c.createdAt)}>
             {timeAgoHu(c.createdAt)} · {formatDateHu(c.createdAt)}
           </span>
@@ -105,7 +115,8 @@ export default function Comment({ c, session, isReply, onReply, onReact, onOpenA
                   onReact(c.id, em)
                 }}
               >
-                <span>{em}</span><span className="c">{cnt}</span>
+                <ReactionIcon em={em} />
+                <span className="c">{cnt}</span>
               </button>
             ))}
           </div>
@@ -135,7 +146,7 @@ export default function Comment({ c, session, isReply, onReply, onReact, onOpenA
                       key={ce.id}
                       className="emoji-pick"
                       title={ce.name}
-                      onClick={() => { onReact(c.id, `[emoji:${ce.name}:${ce.url}]`); setShowEmoji(false) }}
+                      onClick={() => { onReact(c.id, ce.url); setShowEmoji(false) }}
                     >
                       <img src={ce.url} alt={ce.name} style={{ width: 20, height: 20, objectFit: 'contain' }} />
                     </button>

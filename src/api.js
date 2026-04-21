@@ -198,6 +198,18 @@ export const customEmojiApi = {
   delete: (id) => req(`/superadmin/custom-emojis/${id}`, { method: 'DELETE' }),
 }
 
+// ── Profile ───────────────────────────────────────────────────────────────────
+export const profileApi = {
+  get: (username) => req(`/profile/${encodeURIComponent(username)}`),
+  update: (username, data) => req(`/profile/${encodeURIComponent(username)}`, { method: 'PATCH', body: data }),
+}
+
+export const profileWallApi = {
+  list: (username) => req(`/profile-wall/${encodeURIComponent(username)}`),
+  post: (username, text) => req(`/profile-wall/${encodeURIComponent(username)}`, { method: 'POST', body: { text } }),
+  delete: (username, id) => req(`/profile-wall/${encodeURIComponent(username)}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+}
+
 // ── Visits ────────────────────────────────────────────────────────────────────
 export const visitsApi = {
   increment: () => req('/visit', { method: 'POST' }),

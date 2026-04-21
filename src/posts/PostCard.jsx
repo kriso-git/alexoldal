@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { formatDateHu, timeAgoHu, catLabel } from '../data.js'
 import { toast } from '../effects.js'
 import { commentsApi, uploadFile } from '../api.js'
-import Comment from './Comment.jsx'
+import Comment, { useCustomEmojis } from './Comment.jsx'
 import YouTubePlayer from './YouTubePlayer.jsx'
 import AudioPlayer from './AudioPlayer.jsx'
 
@@ -18,7 +18,7 @@ const ROLE_BADGE = {
   admin:      { label: 'A',  color: 'var(--accent)' },
 }
 
-export default function PostCard({ post, session, onReact, onComment, onReplyComment, onReactComment, onDeleteComment, onDeletePost, onPin, onOpenAuth, index, onDragStart, onDragOver, onDrop, draggingId, dragOverId }) {
+export default function PostCard({ post, session, onReact, onComment, onReplyComment, onReactComment, onDeleteComment, onDeletePost, onPin, onOpenAuth, onProfile, index, onDragStart, onDragOver, onDrop, draggingId, dragOverId }) {
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [comments, setComments] = useState(null)
@@ -26,10 +26,20 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
   const [shareOpen, setShareOpen] = useState(false)
   const [pendingImage, setPendingImage] = useState(null)
   const [imageUploading, setImageUploading] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const fileInputRef = useRef(null)
   const mediaRef = useRef(null)
+  const emojiPickerRef = useRef(null)
   const isAdmin = session?.role === 'admin' || session?.role === 'superadmin'
   const commentCount = post.commentCount || 0
+  const customEmojis = useCustomEmojis()
+
+  useEffect(() => {
+    if (!showEmojiPicker) return
+    const close = (e) => { if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target)) setShowEmojiPicker(false) }
+    setTimeout(() => document.addEventListener('click', close), 0)
+    return () => document.removeEventListener('click', close)
+  }, [showEmojiPicker])
 
   useEffect(() => {
     if (!commentsOpen || comments !== null) return
@@ -119,12 +129,13 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
             <span>{timeAgoHu(post.createdAt)}</span>
             <span className="dot">·</span>
             <span className="post-author-wrap">
-              <span className="post-author">@{post.author}</span>
+              <button className="post-author link-btn" onClick={() => onProfile?.(post.author)}>@{post.author}</button>
               {roleBadge && (
                 <span className="post-author-badge" style={{ color: roleBadge.color, borderColor: roleBadge.color }}>
                   {roleBadge.label}
                 </span>
               )}
+              {post.level > 1 && <span className="level-badge">LV.{post.level}</span>}
             </span>
           </div>
           <h2 className="post-title glitch-hover">
@@ -184,6 +195,34 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
               </button>
             )
           })}
+          {Object.entries(post.reactions || {})
+            .filter(([key, cnt]) => key.startsWith('http') && cnt > 0)
+            .map(([url, cnt]) => {
+              const reacted = post.myReactions?.includes(url)
+              return (
+                <button key={url} className={`react-btn${reacted ? ' reacted' : ''}`}
+                  onClick={() => { if (!session) return onOpenAuth('login'); onReact(post.id, url) }}>
+                  <img src={url} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} />
+                  <span className="count">{cnt}</span>
+                </button>
+              )
+            })}
+          {customEmojis.length > 0 && (
+            <div className="emoji-picker-wrap" ref={emojiPickerRef}>
+              <button className="react-btn react-btn-add" title="Egyedi emoji reakció"
+                onClick={() => { if (!session) return onOpenAuth('login'); setShowEmojiPicker(o => !o) }}>
+                <span className="emoji">+</span>
+              </button>
+              <div className={`emoji-picker${showEmojiPicker ? ' open' : ''}`}>
+                {customEmojis.map(ce => (
+                  <button key={ce.id} className="emoji-pick" title={ce.name}
+                    onClick={() => { onReact(post.id, ce.url); setShowEmojiPicker(false) }}>
+                    <img src={ce.url} alt={ce.name} style={{ width: 20, height: 20, objectFit: 'contain' }} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="post-actions">
           <button className="icon-btn" onClick={() => setCommentsOpen(o => !o)}>

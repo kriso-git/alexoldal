@@ -10,6 +10,7 @@ import PostCard from './posts/PostCard.jsx'
 import Composer from './posts/Composer.jsx'
 import SuperAdmin from './SuperAdmin.jsx'
 import TiszaIntro from './components/TiszaIntro.jsx'
+import ProfilePage from './components/ProfilePage.jsx'
 import {
   setAccessToken, clearAccessToken, setUnauthCallback,
   tryRestoreSession, authApi, postsApi, commentsApi,
@@ -34,6 +35,7 @@ export default function App() {
   const [dragOverId, setDragOverId] = useState(null)
   const [superadminOpen, setSuperadminOpen] = useState(false)
   const [showTiszaIntro, setShowTiszaIntro] = useState(true)
+  const [profileUser, setProfileUser] = useState(null)
   const feedRef = useRef(null)
 
   const [tweaks, setTweaks] = useState(() => {
@@ -353,6 +355,32 @@ export default function App() {
     return <SuperAdmin onClose={() => setSuperadminOpen(false)} session={session} onLogout={handleLogout} />
   }
 
+  if (profileUser) {
+    return (
+      <div className="app">
+        <Sidebar
+          session={session}
+          activeCategory={activeCategory}
+          onCategory={(id) => { setProfileUser(null); handleCategory(id) }}
+          counts={counts}
+          onOpenAuth={openAuth}
+          onLogout={handleLogout}
+          onSuperadmin={isSuperadmin ? () => setSuperadminOpen(true) : null}
+          onProfile={setProfileUser}
+          userPosts={posts}
+        />
+        <div className="main">
+          <ProfilePage
+            username={profileUser}
+            session={session}
+            onBack={() => setProfileUser(null)}
+            onProfile={setProfileUser}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {showTiszaIntro && (
@@ -367,6 +395,8 @@ export default function App() {
           onOpenAuth={openAuth}
           onLogout={handleLogout}
           onSuperadmin={isSuperadmin ? () => setSuperadminOpen(true) : null}
+          onProfile={setProfileUser}
+          userPosts={posts}
         />
 
         <div className="main">
@@ -425,6 +455,7 @@ export default function App() {
                 onDeletePost={deletePost}
                 onPin={isAdmin ? pinPost : null}
                 onOpenAuth={openAuth}
+                onProfile={setProfileUser}
                 onDragStart={onDragStart}
                 onDragOver={onDragOver}
                 onDrop={onDrop}

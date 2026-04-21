@@ -2,6 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import { CATEGORIES } from '../data.js'
 import BanCounter from './BanCounter.jsx'
 
+function getLevelInfo(xp = 0) {
+  let level = 1
+  while (xp >= level * (level + 1) / 2 * 100) level++
+  const prev = (level - 1) * level / 2 * 100
+  const next = level * (level + 1) / 2 * 100
+  return {
+    level,
+    percent: Math.min(100, Math.floor((xp - prev) / (next - prev) * 100)),
+    next: next - prev,
+    progress: xp - prev,
+  }
+}
+
 function useTwitchLive(channel) {
   const [isLive, setIsLive] = useState(false)
   useEffect(() => {
@@ -111,10 +124,14 @@ function DraggableCube() {
   )
 }
 
-export default function Sidebar({ session, activeCategory, onCategory, counts, onOpenAuth, onLogout, onSuperadmin }) {
+export default function Sidebar({ session, activeCategory, onCategory, counts, onOpenAuth, onLogout, onSuperadmin, onProfile, userPosts }) {
   const isAdmin = session?.role === 'admin' || session?.role === 'superadmin'
   const isSuperadmin = session?.role === 'superadmin'
   const isLive = useTwitchLive('f3xykeewt')
+  const [submittedOpen, setSubmittedOpen] = useState(false)
+
+  const lvInfo = getLevelInfo(session?.xp || 0)
+  const ownPosts = userPosts?.filter(p => p.author === session?.username) || []
 
   return (
     <aside className="sidebar">
@@ -163,6 +180,52 @@ export default function Sidebar({ session, activeCategory, onCategory, counts, o
             </button>
           ))}
         </div>
+
+        {session && (
+          <>
+            <div className="user-tab" onClick={() => onProfile?.(session.username)} role="button" tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && onProfile?.(session.username)}>
+              <div className="user-tab-row">
+                {session.avatar_url
+                  ? <img src={session.avatar_url} alt={session.username} className="user-avatar" />
+                  : <div className="user-avatar-placeholder">👤</div>
+                }
+                <div className="user-tab-info">
+                  <div className="user-tab-name">@{session.username}</div>
+                  <div className="user-tab-level">LV.{lvInfo.level} · {session.xp || 0} XP</div>
+                </div>
+              </div>
+              <div className="xp-bar-wrap">
+                <div className="xp-bar-label">
+                  <span>XP</span>
+                  <span>{lvInfo.progress}/{lvInfo.next}</span>
+                </div>
+                <div className="xp-bar">
+                  <div className="xp-bar-fill" style={{ width: `${lvInfo.percent}%` }} />
+                </div>
+              </div>
+            </div>
+
+            {ownPosts.length > 0 && (
+              <div className="submitted-section">
+                <button className="submitted-toggle" onClick={() => setSubmittedOpen(o => !o)}>
+                  <span>beküldött ({ownPosts.length})</span>
+                  <span>{submittedOpen ? '▴' : '▾'}</span>
+                </button>
+                <div className="submitted-list" style={{ maxHeight: submittedOpen ? ownPosts.length * 28 + 'px' : 0 }}>
+                  {ownPosts.slice(0, 10).map(p => (
+                    <button key={p.id} className="submitted-item" onClick={() => {
+                      const el = document.getElementById(p.id) || document.querySelector(`[data-id="${p.id}"]`)
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }}>
+                      {p.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div className="session-box">
