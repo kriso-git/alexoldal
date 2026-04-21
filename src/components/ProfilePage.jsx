@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { formatDateHu, timeAgoHu } from '../data.js'
 import { toast } from '../effects.js'
 import { profileApi, profileWallApi, uploadFile } from '../api.js'
@@ -35,6 +35,25 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState(null)
+  const [searching, setSearching] = useState(false)
+
+  const handleSearch = useCallback(async (e) => {
+    e.preventDefault()
+    const q = searchQuery.trim()
+    if (!q) return
+    setSearching(true)
+    try {
+      const results = await profileApi.search(q)
+      setSearchResults(results)
+    } catch {
+      toast('Keresési hiba', 'err')
+    } finally {
+      setSearching(false)
+    }
+  }, [searchQuery])
 
   useEffect(() => {
     setLoading(true)
@@ -242,6 +261,54 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
             </div>
           </div>
         </>
+      )}
+
+      {isOwn && (
+        <div className="profile-section">
+          <div className="profile-section-title">Felhasználó keresés</div>
+          <div className="profile-section-body">
+            <form onSubmit={handleSearch} style={{ display: 'flex', gap: 6 }}>
+              <input
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setSearchResults(null) }}
+                placeholder="Felhasználónév keresése..."
+                style={{ flex: 1 }}
+              />
+              <button type="submit" className="btn" disabled={searching || !searchQuery.trim()}>
+                {searching ? '…' : 'Keres'}
+              </button>
+            </form>
+            {searchResults !== null && (
+              <div style={{ marginTop: 8 }}>
+                {searchResults.length === 0 && (
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)', padding: '8px 0' }}>
+                    [ nincs találat ]
+                  </div>
+                )}
+                {searchResults.map(u => (
+                  <button
+                    key={u.username}
+                    className="link-btn"
+                    onClick={() => onProfile?.(u.username)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 0', borderBottom: '1px solid var(--border)' }}
+                  >
+                    {u.avatar_url
+                      ? <img src={u.avatar_url} alt={u.username} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                      : <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-2)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>👤</span>
+                    }
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text)' }}>@{u.username}</span>
+                    {u.level > 1 && <span className="level-badge" style={{ fontSize: 9, padding: '1px 5px' }}>LV.{u.level}</span>}
+                    {u.role !== 'user' && (
+                      <span style={{ fontSize: 9, color: u.role === 'superadmin' ? 'var(--magenta)' : 'var(--accent)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>
+                        {u.role === 'superadmin' ? '⚡' : 'ADMIN'}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="profile-wall">

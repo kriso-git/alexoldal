@@ -1003,6 +1003,8 @@ body.cursor-trail .cursor-dot { display: block; }
 
 /* ── POST AUTHOR ─────────────────────────────────────────────────────────────── */
 .post-author-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.post-author-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; cursor: pointer; flex-shrink: 0; border: 1px solid var(--border); transition: opacity 0.15s; }
+.post-author-avatar:hover { opacity: 0.8; }
 .post-author { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
 .post-author-badge {
   font-size: 9px; padding: 1px 4px;

@@ -202,6 +202,7 @@ export const customEmojiApi = {
 export const profileApi = {
   get: (username) => req(`/profile/${encodeURIComponent(username)}`),
   update: (username, data) => req(`/profile/${encodeURIComponent(username)}`, { method: 'PATCH', body: data }),
+  search: (q) => req(`/profile?search=${encodeURIComponent(q)}`),
 }
 
 export const profileWallApi = {

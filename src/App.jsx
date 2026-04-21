@@ -164,7 +164,8 @@ export default function App() {
       const post = await postsApi.create(postData)
       setPosts(prev => [post, ...prev])
       setPostOrder(prev => [post.id, ...prev])
-      toast('POSZT KIADVA')
+      if (post.user_xp !== undefined) setSession(s => s ? { ...s, xp: post.user_xp } : s)
+      toast('POSZT KIADVA +20 XP')
     } catch (e) {
       toast(e.message, 'err')
     }
@@ -207,6 +208,7 @@ export default function App() {
       setPosts(prev => prev.map(p => p.id === postId
         ? { ...p, commentCount: (p.commentCount || 0) + 1, _newComment: comment }
         : p))
+      if (comment.user_xp !== undefined) setSession(s => s ? { ...s, xp: comment.user_xp } : s)
       return comment
     } catch (e) {
       toast(e.message, 'err')
@@ -216,7 +218,9 @@ export default function App() {
 
   const replyComment = useCallback(async (commentId, text) => {
     try {
-      return await commentsApi.reply(commentId, text)
+      const reply = await commentsApi.reply(commentId, text)
+      if (reply?.user_xp !== undefined) setSession(s => s ? { ...s, xp: reply.user_xp } : s)
+      return reply
     } catch (e) {
       toast(e.message, 'err')
       return null

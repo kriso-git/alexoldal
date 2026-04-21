@@ -129,6 +129,14 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
             <span>{timeAgoHu(post.createdAt)}</span>
             <span className="dot">·</span>
             <span className="post-author-wrap">
+              {post.author_avatar && (
+                <img
+                  src={post.author_avatar}
+                  alt={post.author}
+                  className="post-author-avatar"
+                  onClick={() => onProfile?.(post.author)}
+                />
+              )}
               <button className="post-author link-btn" onClick={() => onProfile?.(post.author)}>@{post.author}</button>
               {roleBadge && (
                 <span className="post-author-badge" style={{ color: roleBadge.color, borderColor: roleBadge.color }}>
