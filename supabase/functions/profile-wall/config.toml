@@ -1,0 +1,2 @@
+[functions.profile-wall]
+verify_jwt = false

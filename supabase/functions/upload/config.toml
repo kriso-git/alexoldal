@@ -1,0 +1,2 @@
+[functions.upload]
+verify_jwt = false
