@@ -131,6 +131,8 @@ export const postsApi = {
     req('/posts/order', { method: 'PUT', body: { order } }),
   react: (postId, key) =>
     req(`/posts/${encodeURIComponent(postId)}/react`, { method: 'POST', body: { key } }).then(mapReactResult),
+  pin: (id, pinned) =>
+    req('/posts/pin', { method: 'PATCH', body: { id, pinned } }),
 }
 
 // ── Comments ──────────────────────────────────────────────────────────────────

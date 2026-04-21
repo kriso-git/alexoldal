@@ -20,6 +20,7 @@ export default function TiszaIntro({ onDone }) {
       const tryPlay = () => { audio.play().catch(() => {}) }
       document.addEventListener('click', tryPlay, { once: true })
       document.addEventListener('keydown', tryPlay, { once: true })
+      document.addEventListener('touchstart', tryPlay, { once: true })
     })
 
     timerRef.current = setTimeout(finish, 3000)

@@ -236,6 +236,17 @@ export default function App() {
     }
   }, [])
 
+  const pinPost = useCallback(async (id, pinned) => {
+    setPosts(prev => prev.map(p => p.id === id ? { ...p, pinned } : p))
+    try {
+      await postsApi.pin(id, pinned)
+      toast(pinned ? '📌 Kitűzve' : 'Kitűző eltávolítva')
+    } catch (e) {
+      setPosts(prev => prev.map(p => p.id === id ? { ...p, pinned: !pinned } : p))
+      toast(e.message, 'err')
+    }
+  }, [])
+
   const reactComment = useCallback(async (commentId, emoji) => {
     try {
       return await commentsApi.react(commentId, emoji)
@@ -315,8 +326,8 @@ export default function App() {
 
   // ── Filtered + ordered posts ──────────────────────────────────────────────
   const filtered = useMemo(() => {
-    if (activeCategory === 'all') return posts
-    return posts.filter(p => p.category === activeCategory)
+    const arr = activeCategory === 'all' ? posts : posts.filter(p => p.category === activeCategory)
+    return [...arr.filter(p => p.pinned), ...arr.filter(p => !p.pinned)]
   }, [posts, activeCategory])
 
   const counts = useMemo(() => {
@@ -412,6 +423,7 @@ export default function App() {
                 onReactComment={reactComment}
                 onDeleteComment={deleteComment}
                 onDeletePost={deletePost}
+                onPin={isAdmin ? pinPost : null}
                 onOpenAuth={openAuth}
                 onDragStart={onDragStart}
                 onDragOver={onDragOver}

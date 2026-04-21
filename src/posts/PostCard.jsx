@@ -18,7 +18,7 @@ const ROLE_BADGE = {
   admin:      { label: 'A',  color: 'var(--accent)' },
 }
 
-export default function PostCard({ post, session, onReact, onComment, onReplyComment, onReactComment, onDeleteComment, onDeletePost, onOpenAuth, index, onDragStart, onDragOver, onDrop, draggingId, dragOverId }) {
+export default function PostCard({ post, session, onReact, onComment, onReplyComment, onReactComment, onDeleteComment, onDeletePost, onPin, onOpenAuth, index, onDragStart, onDragOver, onDrop, draggingId, dragOverId }) {
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [comments, setComments] = useState(null)
@@ -127,7 +127,10 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
               )}
             </span>
           </div>
-          <h2 className="post-title glitch-hover">{post.title}</h2>
+          <h2 className="post-title glitch-hover">
+            {post.pinned && <span className="post-pin-icon">📌 </span>}
+            {post.title}
+          </h2>
         </div>
         <div
           className="post-handle"
@@ -212,6 +215,12 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
               </div>
             )}
           </div>
+          {isAdmin && onPin && (
+            <button className="icon-btn" onClick={() => onPin(post.id, !post.pinned)}
+              title={post.pinned ? 'Kitűző eltávolítása' : 'Kitűzés az oldal tetejére'}>
+              {post.pinned ? '📌 Kitűzve' : '📌 Kitűz'}
+            </button>
+          )}
           {isAdmin && (
             <button className="icon-btn danger" onClick={() => onDeletePost(post.id)}>🗑 Töröl</button>
           )}
