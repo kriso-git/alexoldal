@@ -333,7 +333,9 @@ export default function App() {
   // ── Filtered + ordered posts ──────────────────────────────────────────────
   const filtered = useMemo(() => {
     const arr = activeCategory === 'all' ? posts : posts.filter(p => p.category === activeCategory)
-    return [...arr.filter(p => p.pinned), ...arr.filter(p => !p.pinned)]
+    const pinned = arr.filter(p => p.pinned)
+    const unpinned = arr.filter(p => !p.pinned).sort((a, b) => b.createdAt - a.createdAt)
+    return [...pinned, ...unpinned]
   }, [posts, activeCategory])
 
   const counts = useMemo(() => {
