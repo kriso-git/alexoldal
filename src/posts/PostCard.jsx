@@ -274,6 +274,7 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
                 className="comment-input"
                 placeholder={`Írj kommentet ${session.username} néven...`}
                 value={commentText}
+                maxLength={2000}
                 onChange={e => setCommentText(e.target.value)}
               />
               <button

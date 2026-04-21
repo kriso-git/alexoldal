@@ -46,6 +46,9 @@ export default function Composer({ onPost }) {
     if (!ALLOWED_UPLOAD.has(file.type)) {
       return toast('Csak kép (gif/jpg/png/webp) és hang (mp3/wav/ogg) fájl engedélyezett', 'err')
     }
+    if (file.size > 100 * 1024 * 1024) {
+      return toast('A fájl túl nagy (max 100 MB)', 'err')
+    }
     setUploading(true); setUploadPct(0)
     try {
       const result = await uploadFile(file, setUploadPct)
@@ -107,7 +110,7 @@ export default function Composer({ onPost }) {
           <div className="composer-row">
             <div className="form-group" style={{ margin: 0, flex: 2 }}>
               <label className="form-label">Cím</label>
-              <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Mi történt most?" autoFocus />
+              <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Mi történt most?" maxLength={200} autoFocus />
             </div>
             <div className="form-group" style={{ margin: 0, flex: 1 }}>
               <label className="form-label">Kategória</label>
@@ -121,7 +124,7 @@ export default function Composer({ onPost }) {
 
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Szöveg (opc.)</label>
-            <textarea className="form-textarea" value={body} onChange={e => setBody(e.target.value)} placeholder="Mondd el..." rows={3} />
+            <textarea className="form-textarea" value={body} onChange={e => setBody(e.target.value)} placeholder="Mondd el..." maxLength={5000} rows={3} />
           </div>
 
           {category === 'videos' ? (

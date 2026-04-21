@@ -12,7 +12,7 @@ export default function TweaksPanel({ open, onClose, tweaks, setTweaks }) {
   const setKey = (k, v) => {
     setTweaks(prev => ({ ...prev, [k]: v }))
     try {
-      window.parent?.postMessage({ type: "__edit_mode_set_keys", edits: { [k]: v } }, "*")
+      window.parent?.postMessage({ type: "__edit_mode_set_keys", edits: { [k]: v } }, window.location.origin)
     } catch (e) {}
   }
   return (

@@ -85,7 +85,7 @@ export default function App() {
       if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false)
     }
     window.addEventListener('message', handler)
-    try { window.parent?.postMessage({ type: '__edit_mode_available' }, '*') } catch {}
+    try { window.parent?.postMessage({ type: '__edit_mode_available' }, window.location.origin) } catch {}
     return () => {
       window.removeEventListener('beforeunload', saveScroll)
       window.removeEventListener('message', handler)

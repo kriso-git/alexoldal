@@ -31,7 +31,9 @@ function renderCommentText(text) {
   while ((m = combined.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index))
     if (m[1]) {
-      parts.push(<img key={m.index} src={m[1]} className="comment-img" alt="kép" onClick={() => window.open(m[1], '_blank')} />)
+      const imgUrl = m[1]
+      const safeOpen = () => { try { const p = new URL(imgUrl).protocol; if (/^https?:$/.test(p)) window.open(imgUrl, '_blank') } catch {} }
+      parts.push(<img key={m.index} src={imgUrl} className="comment-img" alt="kép" onClick={safeOpen} />)
     } else if (m[2]) {
       parts.push(<img key={m.index} src={m[2]} className="emoji-inline" alt="emoji" />)
     }
@@ -168,6 +170,7 @@ export default function Comment({ c, session, isReply, onReply, onReact, onOpenA
               className="comment-input"
               placeholder={`Válasz @${c.author} részére...`}
               value={replyText}
+              maxLength={2000}
               onChange={e => setReplyText(e.target.value)}
               autoFocus
             />
