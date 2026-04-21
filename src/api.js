@@ -8,12 +8,14 @@ export function clearAccessToken() { _accessToken = null }
 export function setUnauthCallback(fn) { _onUnauth = fn }
 
 const API_BASE = import.meta.env.VITE_API_BASE || ''
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzeXd6d3BhaHhieHZjY3F2YXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDMzMzQsImV4cCI6MjA5MjE3OTMzNH0.lFQOC2nCkKFMLDEIk0wToJLNOevAg7yUCKUEkuPOHGk'
 
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
 async function req(path, opts = {}) {
   const headers = {
     'Content-Type': 'application/json',
-    ...(_accessToken ? { Authorization: `Bearer ${_accessToken}` } : {}),
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': _accessToken ? `Bearer ${_accessToken}` : `Bearer ${SUPABASE_ANON_KEY}`,
     ...opts.headers,
   }
 
