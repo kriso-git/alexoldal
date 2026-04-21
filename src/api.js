@@ -54,7 +54,7 @@ async function _doRefresh() {
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
       })
       if (!res.ok) return false
       const { accessToken } = await res.json()
