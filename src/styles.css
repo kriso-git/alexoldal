@@ -1160,6 +1160,19 @@ body.cursor-trail .cursor-dot { display: block; }
   -webkit-appearance: none; width: 10px; height: 10px;
   border-radius: 50%; background: var(--accent); cursor: pointer;
 }
+.music-close-btn { opacity: 0.5; font-size: 11px; }
+.music-close-btn:hover { opacity: 1; background: var(--danger) !important; border-color: var(--danger) !important; color: #fff !important; }
+.music-restore {
+  position: fixed; bottom: 16px; left: 16px; z-index: 800;
+  width: 36px; height: 36px;
+  background: var(--bg-1); border: 1px solid var(--border-strong);
+  color: var(--accent); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.2);
+  transition: background 0.15s, color 0.15s;
+}
+.music-restore:hover { background: var(--accent); color: var(--bg-0); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ── TISZA EASTER EGG ────────────────────────────────────────────────────── */

@@ -10,6 +10,7 @@ export default function MusicPlayer() {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [collapsed, setCollapsed] = useState(false)
+  const [closed, setClosed] = useState(false)
   const audioRef = useRef(null)
 
   useEffect(() => {
@@ -71,6 +72,19 @@ export default function MusicPlayer() {
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
+  if (closed) {
+    return (
+      <button
+        className="music-restore"
+        onClick={() => setClosed(false)}
+        title="Zenelejátszó megnyitása"
+        aria-label="Zenelejátszó megnyitása"
+      >
+        ♪
+      </button>
+    )
+  }
+
   return (
     <div className={`music-player${playing ? '' : ' paused'}${collapsed ? ' collapsed' : ''}`}>
       <audio ref={audioRef} onEnded={next} preload="none" />
@@ -91,10 +105,16 @@ export default function MusicPlayer() {
         <button
           className="music-toggle"
           onClick={() => setCollapsed(v => !v)}
-          title={collapsed ? 'Kibont' : 'Összecsuks'}
-          style={{ fontSize: 9, opacity: 0.6 }}
+          title={collapsed ? 'Kibont' : 'Összecsuk'}
         >
           {collapsed ? '▲' : '▼'}
+        </button>
+        <button
+          className="music-toggle music-close-btn"
+          onClick={() => { setPlaying(false); setClosed(true) }}
+          title="Bezárás"
+        >
+          ✕
         </button>
       </div>
 
