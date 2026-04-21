@@ -147,7 +147,11 @@ export default function YouTubePlayer({ src }) {
   }
 
   const handleQualityChange = (q) => {
-    playerRef.current?.setPlaybackQuality?.(q)
+    const p = playerRef.current
+    if (!p) return
+    const t = p.getCurrentTime?.() || 0
+    p.setPlaybackQuality?.(q)
+    p.seekTo?.(t, true)
     setQuality(q)
   }
 
