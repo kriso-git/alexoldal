@@ -7,6 +7,46 @@ const Q_LABELS = {
 }
 const STATIC_QUALITIES = ['hd1080', 'hd720', 'large', 'medium', 'small', 'tiny']
 
+function QualityDropdown({ quality, qualities, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [open])
+
+  return (
+    <div className="yt-quality-wrap" ref={ref}>
+      <button
+        type="button"
+        className={`yt-quality-btn${open ? ' open' : ''}`}
+        onClick={() => setOpen(o => !o)}
+        title="Videóminőség"
+      >
+        <span>{Q_LABELS[quality] || quality}</span>
+        <svg className="yt-quality-chevron" width="8" height="8" viewBox="0 0 8 8" fill="none">
+          <path d="M1.5 2.5L4 5.5L6.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      <div className={`yt-quality-menu${open ? ' open' : ''}`}>
+        {qualities.map(q => (
+          <button
+            key={q}
+            type="button"
+            className={`yt-quality-option${q === quality ? ' active' : ''}`}
+            onClick={() => { onChange(q); setOpen(false) }}
+          >
+            {Q_LABELS[q] || q}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function YouTubePlayer({ src }) {
   const containerRef = useRef(null)
   const playerRef = useRef(null)
@@ -106,8 +146,7 @@ export default function YouTubePlayer({ src }) {
     setCurrentTime(t)
   }
 
-  const handleQualityChange = (e) => {
-    const q = e.target.value
+  const handleQualityChange = (q) => {
     playerRef.current?.setPlaybackQuality?.(q)
     setQuality(q)
   }
@@ -143,16 +182,11 @@ export default function YouTubePlayer({ src }) {
           title={`Hangerő: ${volume}%`}
         />
         {ready && (
-          <select
-            className="yt-quality-select"
-            value={quality}
+          <QualityDropdown
+            quality={quality}
+            qualities={availableQualities}
             onChange={handleQualityChange}
-            title="Videóminőség"
-          >
-            {availableQualities.map(q => (
-              <option key={q} value={q}>{Q_LABELS[q] || q}</option>
-            ))}
-          </select>
+          />
         )}
       </div>
     </div>
