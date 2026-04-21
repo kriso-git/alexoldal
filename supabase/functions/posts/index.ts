@@ -198,12 +198,14 @@ serve(async (req) => {
     const { data: ex } = await db.from("post_reactions")
       .select("post_id").eq("post_id", postId).eq("user_id", user.id).eq("reaction_key", k).maybeSingle()
 
+    let reactorXp: number | undefined
     if (ex) {
       await db.from("post_reactions").delete()
         .eq("post_id", postId).eq("user_id", user.id).eq("reaction_key", k)
     } else {
       await db.from("post_reactions").insert({ post_id: postId, user_id: user.id, reaction_key: k, created_at: Date.now() })
       if (Number(p.author_id) !== user.id) await awardXp(db, Number(p.author_id), 5)
+      reactorXp = await awardXp(db, user.id, 2)
     }
 
     const { data: allR } = await db.from("post_reactions").select("reaction_key").eq("post_id", postId)
@@ -211,7 +213,7 @@ serve(async (req) => {
     for (const r of allR ?? []) reactions[r.reaction_key] = (reactions[r.reaction_key] ?? 0) + 1
 
     const { data: myR } = await db.from("post_reactions").select("reaction_key").eq("post_id", postId).eq("user_id", user.id)
-    return json({ reactions, my_reactions: (myR ?? []).map((r: Record<string,string>) => r.reaction_key) })
+    return json({ reactions, my_reactions: (myR ?? []).map((r: Record<string,string>) => r.reaction_key), user_xp: reactorXp })
   }
 
   return json({ error: "Nem található" }, 404)

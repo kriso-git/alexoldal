@@ -193,8 +193,9 @@ export default function App() {
       return { ...p, reactions, myReactions }
     }))
     try {
-      const { reactions, myReactions } = await postsApi.react(postId, key)
+      const { reactions, myReactions, user_xp } = await postsApi.react(postId, key)
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, reactions, myReactions } : p))
+      if (user_xp !== undefined) setSession(s => s ? { ...s, xp: user_xp } : s)
     } catch (e) {
       await loadPosts() // rollback on error
       toast(e.message, 'err')

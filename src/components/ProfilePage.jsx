@@ -133,6 +133,7 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
       const msg = await profileWallApi.post(username, wallText.trim())
       setWall(prev => [msg, ...prev])
       setWallText('')
+      if (msg.user_xp !== undefined) onSessionUpdate?.({ xp: msg.user_xp })
     } catch (e) {
       toast(e.message, 'err')
     } finally {

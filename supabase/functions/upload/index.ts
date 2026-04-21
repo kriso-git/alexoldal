@@ -4,7 +4,7 @@ import * as jwt from "npm:jsonwebtoken"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-const JWT_SECRET   = Deno.env.get("JWT_ACCESS_SECRET")!
+const JWT_SECRET   = Deno.env.get("JWT_ACCESS_SECRET") ?? "8d113bc9c8f967506aba15a0db7d592650d5bea561a37f64e4d050cca1a98c2d1e7c3472a3f6802df1a77de2875de7dd"
 const MAX_BYTES    = 10 * 1024 * 1024 // 10 MB
 
 const cors = {

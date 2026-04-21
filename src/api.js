@@ -108,7 +108,7 @@ function mapComment(raw) {
 }
 
 function mapReactResult(raw) {
-  return { reactions: raw.reactions ?? {}, myReactions: raw.my_reactions ?? raw.myReactions ?? [] }
+  return { reactions: raw.reactions ?? {}, myReactions: raw.my_reactions ?? raw.myReactions ?? [], user_xp: raw.user_xp }
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
