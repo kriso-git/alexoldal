@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { ensureYTScript, onYTReady, extractVideoId, fmtTime } from '../utils/ytPlayer.js'
 
 const Q_LABELS = {
-  hd2160: '4K', hd1440: '1440p', hd1080: '1080p', hd720: '720p',
+  hd1080: '1080p', hd720: '720p',
   large: '480p', medium: '360p', small: '240p', tiny: '144p', auto: 'Auto',
 }
+const STATIC_QUALITIES = ['hd1080', 'hd720', 'large', 'medium', 'small', 'tiny']
 
 export default function YouTubePlayer({ src }) {
   const containerRef = useRef(null)
@@ -38,9 +39,11 @@ export default function YouTubePlayer({ src }) {
             if (destroyed) return
             e.target.setVolume(volume)
             setDuration(e.target.getDuration() || 0)
-            const quals = e.target.getAvailableQualityLevels?.() || []
-            setAvailableQualities(quals)
-            setQuality(e.target.getPlaybackQuality?.() || 'auto')
+            const apiQuals = e.target.getAvailableQualityLevels?.() || []
+            const filtered = apiQuals.filter(q => Q_LABELS[q])
+            setAvailableQualities(filtered.length > 0 ? filtered : STATIC_QUALITIES)
+            e.target.setPlaybackQuality?.('hd1080')
+            setQuality('hd1080')
             setReady(true)
           },
           onStateChange: (e) => {
@@ -139,7 +142,7 @@ export default function YouTubePlayer({ src }) {
           className="yt-volume-slider"
           title={`Hangerő: ${volume}%`}
         />
-        {availableQualities.length > 1 && (
+        {ready && (
           <select
             className="yt-quality-select"
             value={quality}

@@ -178,7 +178,9 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
 
       {post.body && (
         <div className="post-body">
-          {post.body.split(/\n\n+/).map((para, i) => <p key={i}>{para}</p>)}
+          {post.body.split(/\n\n+/).map((para, i) => (
+            <p key={i} dangerouslySetInnerHTML={{ __html: sanitizeBody(para) }} />
+          ))}
         </div>
       )}
 
@@ -347,6 +349,17 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
       </div>
     </article>
   )
+}
+
+function sanitizeBody(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/&lt;(b|i|u|s)&gt;([\s\S]*?)&lt;\/(b|i|u|s)&gt;/g, (_, open, content, close) => {
+      if (open !== close) return `&lt;${open}&gt;${content}&lt;/${close}&gt;`
+      return `<${open}>${content}</${close}>`
+    })
 }
 
 function removeComment(list, id) {

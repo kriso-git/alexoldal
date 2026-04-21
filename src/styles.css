@@ -125,6 +125,10 @@ body.cursor-trail .cursor-dot { display: block; }
   0% { opacity: 0.8; transform: translate(-50%,-50%) scale(1); }
   100% { opacity: 0; transform: translate(-50%,-50%) scale(0.2); }
 }
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
 
 /* ============================================
    LAYOUT
@@ -493,6 +497,15 @@ body.cursor-trail .cursor-dot { display: block; }
 .post-media video, .post-media img, .post-media iframe {
   width: 100%; height: 100%; object-fit: cover; display: block; border: 0;
 }
+.post-media.img-type {
+  aspect-ratio: unset;
+  height: auto;
+}
+.post-media.img-type img {
+  height: auto;
+  max-height: 640px;
+  object-fit: contain;
+}
 .post-media .play-hint {
   position: absolute; bottom: 10px; left: 10px;
   padding: 4px 8px; background: rgba(0,0,0,0.7);
@@ -734,6 +747,14 @@ body.cursor-trail .cursor-dot { display: block; }
 }
 .form-textarea { resize: vertical; min-height: 100px; }
 .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+.format-toolbar { display: flex; gap: 3px; }
+.format-btn {
+  background: var(--bg-2); border: 1px solid var(--border);
+  color: var(--text-dim); font-family: var(--font-mono); font-size: 11px;
+  padding: 2px 7px; border-radius: 3px; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.format-btn:hover { border-color: var(--accent); color: var(--accent); }
 .form-hint {
   font-size: 10px; color: var(--text-faint);
   font-family: var(--font-mono);
@@ -1003,9 +1024,9 @@ body.cursor-trail .cursor-dot { display: block; }
 
 /* ── POST AUTHOR ─────────────────────────────────────────────────────────────── */
 .post-author-wrap { display: inline-flex; align-items: center; gap: 4px; }
-.post-author-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; cursor: pointer; flex-shrink: 0; border: 1px solid var(--border); transition: opacity 0.15s; }
+.post-author-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; cursor: pointer; flex-shrink: 0; border: 1px solid var(--border); transition: opacity 0.15s; }
 .post-author-avatar:hover { opacity: 0.8; }
-.post-author { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.post-author { font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); font-weight: 600; }
 .post-author-badge {
   font-size: 9px; padding: 1px 4px;
   border: 1px solid; border-radius: 2px;

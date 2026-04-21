@@ -23,6 +23,20 @@ const ALLOWED_UPLOAD = new Set([
   'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/flac',
 ])
 
+function applyFormat(tag, textarea, value, onChange) {
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const selected = value.slice(start, end)
+  if (start === end) return
+  const newValue = value.slice(0, start) + `<${tag}>${selected}</${tag}>` + value.slice(end)
+  onChange(newValue)
+  requestAnimationFrame(() => {
+    textarea.focus()
+    const newCursor = end + tag.length * 2 + 5
+    textarea.setSelectionRange(newCursor, newCursor)
+  })
+}
+
 export default function Composer({ onPost }) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -36,6 +50,7 @@ export default function Composer({ onPost }) {
   const [uploadPct, setUploadPct] = useState(0)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef(null)
+  const bodyRef = useRef(null)
 
   useEffect(() => {
     setMediaSrc(''); setMediaType('none'); setMediaLabel(''); setYoutubeUrl('')
@@ -123,8 +138,30 @@ export default function Composer({ onPost }) {
           </div>
 
           <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Szöveg (opc.)</label>
-            <textarea className="form-textarea" value={body} onChange={e => setBody(e.target.value)} placeholder="Mondd el..." maxLength={5000} rows={3} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <label className="form-label" style={{ margin: 0 }}>Szöveg (opc.)</label>
+              <div className="format-toolbar">
+                {[
+                  { tag: 'b', label: 'B', title: 'Félkövér', style: { fontWeight: 700 } },
+                  { tag: 'i', label: 'I', title: 'Dőlt', style: { fontStyle: 'italic' } },
+                  { tag: 'u', label: 'U', title: 'Aláhúzott', style: { textDecoration: 'underline' } },
+                  { tag: 's', label: 'S', title: 'Áthúzott', style: { textDecoration: 'line-through' } },
+                ].map(({ tag, label, title, style }) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="format-btn"
+                    title={title}
+                    style={style}
+                    onMouseDown={e => {
+                      e.preventDefault()
+                      if (bodyRef.current) applyFormat(tag, bodyRef.current, body, setBody)
+                    }}
+                  >{label}</button>
+                ))}
+              </div>
+            </div>
+            <textarea ref={bodyRef} className="form-textarea" value={body} onChange={e => setBody(e.target.value)} placeholder="Mondd el..." maxLength={5000} rows={3} />
           </div>
 
           {category === 'videos' ? (
