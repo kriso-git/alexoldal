@@ -1162,76 +1162,38 @@ body.cursor-trail .cursor-dot { display: block; }
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* ── TISZA INTRO OVERLAY ─────────────────────────────────────────────────── */
-.tisza-overlay {
-  position: fixed; inset: 0; z-index: 9000;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(8,8,8,0.97);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  opacity: 1;
+/* ── TISZA EASTER EGG ────────────────────────────────────────────────────── */
+.tisza-egg {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 8000;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.45;
+  transition: opacity 0.2s, transform 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
-.tisza-overlay.fading { opacity: 0; transform: scale(1.04); pointer-events: none; }
-.tisza-scanlines {
-  position: absolute; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px);
-  z-index: 1;
+.tisza-egg:hover { opacity: 0.85; transform: scale(1.12); }
+.tisza-egg-playing { opacity: 1; animation: tiszaPulse 1.4s ease-in-out infinite; }
+@keyframes tiszaPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--accent)); transform: scale(1); }
+  50%       { filter: drop-shadow(0 0 18px var(--accent)); transform: scale(1.08); }
 }
-.tisza-inner {
-  position: relative; z-index: 2;
-  display: flex; flex-direction: column; align-items: center; gap: 32px;
-}
-.tisza-scene {
-  width: 280px; height: 140px;
-  perspective: 700px;
-  perspective-origin: 50% 50%;
-}
-.tisza-box {
-  width: 100%; height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  animation: tiszaBoxSpin 3s linear infinite;
-  will-change: transform;
-}
-@keyframes tiszaBoxSpin {
-  from { transform: rotateX(15deg) rotateY(0deg); }
-  to   { transform: rotateX(15deg) rotateY(360deg); }
-}
-.tisza-face {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.tisza-face img {
-  width: 88%; object-fit: contain;
-  filter: drop-shadow(0 0 14px #9dff00) brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(60deg);
-}
-.tisza-face-front  { transform: translateZ(40px); background: rgba(0,0,0,0.9); }
-.tisza-face-back   { transform: rotateY(180deg) translateZ(40px); background: rgba(0,0,0,0.9); }
-.tisza-face-right  { transform: rotateY(90deg)  translateZ(40px); background: rgba(157,255,0,0.65); }
-.tisza-face-left   { transform: rotateY(-90deg) translateZ(40px); background: rgba(157,255,0,0.65); }
-.tisza-face-top    { transform: rotateX(90deg)  translateZ(40px); background: rgba(157,255,0,0.35); }
-.tisza-face-bottom { transform: rotateX(-90deg) translateZ(40px); background: rgba(157,255,0,0.35); }
-
-/* Mobile: filter inside preserve-3d breaks iOS Safari — use single flat spinning face */
-@media (max-width: 768px) {
-  .tisza-scene { perspective: none; width: auto; height: auto; }
-  .tisza-box { transform-style: flat; -webkit-transform-style: flat; animation: none; }
-  .tisza-face { display: none; }
-  .tisza-face-front {
-    display: flex !important;
-    position: static !important;
-    inset: auto !important;
-    background: transparent !important;
-    animation: tiszaMobileSpin 2.5s linear infinite;
-    will-change: transform;
-  }
-  @keyframes tiszaMobileSpin {
-    0%   { transform: perspective(500px) rotateX(10deg) rotateY(0deg); }
-    100% { transform: perspective(500px) rotateX(10deg) rotateY(360deg); }
-  }
-  .tisza-face-front img { width: 240px; max-width: 80vw; }
+.tisza-egg-img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  filter: brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(60deg) drop-shadow(0 0 6px var(--accent));
+  pointer-events: none;
 }
 
 /* ── PIN BADGE ───────────────────────────────────────────────────────────── */

@@ -254,7 +254,7 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
               </div>
             )}
           </div>
-          {isAdmin && onPin && (
+          {onPin && (
             <button className="icon-btn" onClick={() => onPin(post.id, !post.pinned)}
               title={post.pinned ? 'Kitűző eltávolítása' : 'Kitűzés az oldal tetejére'}>
               {post.pinned ? '📌 Kitűzve' : '📌 Kitűz'}

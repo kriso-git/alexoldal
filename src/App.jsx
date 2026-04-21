@@ -34,7 +34,6 @@ export default function App() {
   const [dragId, setDragId] = useState(null)
   const [dragOverId, setDragOverId] = useState(null)
   const [superadminOpen, setSuperadminOpen] = useState(false)
-  const [showTiszaIntro, setShowTiszaIntro] = useState(true)
   const [profileUser, setProfileUser] = useState(null)
   const feedRef = useRef(null)
 
@@ -375,6 +374,7 @@ export default function App() {
             session={session}
             onBack={() => setProfileUser(null)}
             onProfile={setProfileUser}
+            onSessionUpdate={(updates) => setSession(prev => prev ? { ...prev, ...updates } : prev)}
           />
         </div>
       </div>
@@ -383,9 +383,7 @@ export default function App() {
 
   return (
     <>
-      {showTiszaIntro && (
-        <TiszaIntro onDone={() => setShowTiszaIntro(false)} />
-      )}
+      <TiszaIntro />
       <div className="app">
         <Sidebar
           session={session}
@@ -453,7 +451,7 @@ export default function App() {
                 onReactComment={reactComment}
                 onDeleteComment={deleteComment}
                 onDeletePost={deletePost}
-                onPin={isAdmin ? pinPost : null}
+                onPin={isSuperadmin ? pinPost : null}
                 onOpenAuth={openAuth}
                 onProfile={setProfileUser}
                 onDragStart={onDragStart}

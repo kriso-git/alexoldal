@@ -18,20 +18,20 @@ function getLevelInfo(xp = 0) {
   }
 }
 
-export default function ProfilePage({ username, session, onBack, onProfile }) {
+export default function ProfilePage({ username, session, onBack, onProfile, onSessionUpdate }) {
   const [profile, setProfile] = useState(null)
   const [wall, setWall] = useState([])
   const [loading, setLoading] = useState(true)
   const [wallText, setWallText] = useState('')
   const [wallPosting, setWallPosting] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const avatarInputRef = useRef(null)
   const isOwn = session?.username === username
   const isSuperadmin = session?.role === 'superadmin'
   const canEdit = isOwn || isSuperadmin
 
-  // Settings form state
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
@@ -59,6 +59,7 @@ export default function ProfilePage({ username, session, onBack, onProfile }) {
       const { url } = await uploadFile(file)
       await profileApi.update(username, { avatar_url: url })
       setProfile(p => ({ ...p, avatar_url: url }))
+      if (isOwn) onSessionUpdate?.({ avatar_url: url })
       toast('Profilkép frissítve')
     } catch (e) {
       toast(e.message, 'err')
@@ -68,25 +69,39 @@ export default function ProfilePage({ username, session, onBack, onProfile }) {
     }
   }
 
-  const handleSaveSettings = async (e) => {
+  const handleSaveUsername = async (e) => {
     e.preventDefault()
-    if (newPassword && newPassword !== newPasswordConfirm) {
-      toast('A jelszavak nem egyeznek', 'err'); return
+    if (!newUsername.trim() || newUsername.trim() === profile.username) {
+      toast('Nincs változtatás'); return
     }
-    setSaving(true)
+    setSavingUsername(true)
     try {
-      const updates = {}
-      if (newUsername && newUsername !== profile.username) updates.username = newUsername
-      if (newPassword) updates.password = newPassword
-      if (Object.keys(updates).length === 0) { toast('Nincs változtatás'); setSaving(false); return }
-      await profileApi.update(username, updates)
-      setProfile(p => ({ ...p, ...updates }))
-      setNewPassword(''); setNewPasswordConfirm('')
-      toast('Beállítások mentve')
+      await profileApi.update(username, { username: newUsername.trim() })
+      setProfile(p => ({ ...p, username: newUsername.trim() }))
+      if (isOwn) onSessionUpdate?.({ username: newUsername.trim() })
+      toast('Felhasználónév frissítve')
     } catch (e) {
       toast(e.message, 'err')
     } finally {
-      setSaving(false)
+      setSavingUsername(false)
+    }
+  }
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault()
+    if (!newPassword) return
+    if (newPassword !== newPasswordConfirm) {
+      toast('A jelszavak nem egyeznek', 'err'); return
+    }
+    setSavingPassword(true)
+    try {
+      await profileApi.update(username, { password: newPassword })
+      setNewPassword(''); setNewPasswordConfirm('')
+      toast('Jelszó frissítve')
+    } catch (e) {
+      toast(e.message, 'err')
+    } finally {
+      setSavingPassword(false)
     }
   }
 
@@ -177,48 +192,56 @@ export default function ProfilePage({ username, session, onBack, onProfile }) {
       </div>
 
       {canEdit && (
-        <div className="profile-section">
-          <div className="profile-section-title">Fiókbeállítások</div>
-          <div className="profile-section-body">
-            <form onSubmit={handleSaveSettings}>
-              <div className="profile-field">
-                <label>Felhasználónév</label>
-                <div className="profile-field-row">
+        <>
+          <div className="profile-section">
+            <div className="profile-section-title">Felhasználónév</div>
+            <div className="profile-section-body">
+              <form onSubmit={handleSaveUsername}>
+                <div className="profile-field">
                   <input
                     value={newUsername}
                     onChange={e => setNewUsername(e.target.value)}
-                    placeholder="Új felhasználónév"
+                    placeholder="Felhasználónév"
                     minLength={3}
                     maxLength={32}
                   />
                 </div>
-              </div>
-              <div className="profile-field">
-                <label>Új jelszó</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  placeholder="Hagyd üresen ha nem változtatsz"
-                />
-              </div>
-              {newPassword && (
+                <button type="submit" className="btn" disabled={savingUsername} style={{ marginTop: 4 }}>
+                  {savingUsername ? 'Mentés...' : 'Mentés'}
+                </button>
+              </form>
+            </div>
+          </div>
+          <div className="profile-section">
+            <div className="profile-section-title">Jelszó változtatása</div>
+            <div className="profile-section-body">
+              <form onSubmit={handleSavePassword}>
                 <div className="profile-field">
-                  <label>Jelszó megerősítése</label>
                   <input
                     type="password"
-                    value={newPasswordConfirm}
-                    onChange={e => setNewPasswordConfirm(e.target.value)}
-                    placeholder="Írd be újra az új jelszót"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Új jelszó"
+                    minLength={8}
                   />
                 </div>
-              )}
-              <button type="submit" className="btn" disabled={saving} style={{ marginTop: 4 }}>
-                {saving ? 'Mentés...' : 'Mentés'}
-              </button>
-            </form>
+                {newPassword && (
+                  <div className="profile-field">
+                    <input
+                      type="password"
+                      value={newPasswordConfirm}
+                      onChange={e => setNewPasswordConfirm(e.target.value)}
+                      placeholder="Jelszó megerősítése"
+                    />
+                  </div>
+                )}
+                <button type="submit" className="btn" disabled={savingPassword || !newPassword} style={{ marginTop: 4 }}>
+                  {savingPassword ? 'Mentés...' : 'Mentés'}
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <div className="profile-wall">
