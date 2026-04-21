@@ -158,7 +158,8 @@ export async function uploadFile(file, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${API_BASE}/api/upload`)
-    if (_accessToken) xhr.setRequestHeader('Authorization', `Bearer ${_accessToken}`)
+    xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY)
+    xhr.setRequestHeader('Authorization', _accessToken ? `Bearer ${_accessToken}` : `Bearer ${SUPABASE_ANON_KEY}`)
     if (onProgress) xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round(e.loaded / e.total * 100))
     xhr.onload = () => {
       const data = JSON.parse(xhr.responseText)
@@ -180,7 +181,8 @@ export const songsApi = {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.open('POST', `${API_BASE}/api/superadmin/songs/upload`)
-      if (_accessToken) xhr.setRequestHeader('Authorization', `Bearer ${_accessToken}`)
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY)
+      xhr.setRequestHeader('Authorization', _accessToken ? `Bearer ${_accessToken}` : `Bearer ${SUPABASE_ANON_KEY}`)
       xhr.onload = () => {
         const data = JSON.parse(xhr.responseText)
         xhr.status >= 200 && xhr.status < 300 ? resolve(data) : reject(new Error(data.error || `HTTP ${xhr.status}`))
