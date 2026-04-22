@@ -12,7 +12,7 @@ export const CATEGORIES = [
 
 export const ADMIN_CREDENTIALS = { username: "f3xykee", password: "admin1337" };
 
-export const BAN_EPOCH_ISO = "2016-11-29T00:00:00Z";
+export const BAN_EPOCH_ISO = "2016-11-30T00:00:00Z";
 
 export const SEED_POSTS = [
   {
