@@ -18,7 +18,7 @@ const ROLE_BADGE = {
   admin:      { label: 'A',  color: 'var(--accent)' },
 }
 
-export default function PostCard({ post, session, onReact, onComment, onReplyComment, onReactComment, onDeleteComment, onDeletePost, onPin, onOpenAuth, onProfile, index, onDragStart, onDragOver, onDrop, draggingId, dragOverId }) {
+export default function PostCard({ post, session, presenceMap, onReact, onComment, onReplyComment, onReactComment, onDeleteComment, onDeletePost, onPin, onOpenAuth, onProfile, index, onDragStart, onDragOver, onDrop, draggingId, dragOverId }) {
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [comments, setComments] = useState(null)
@@ -102,6 +102,11 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
   }
 
   const roleBadge = ROLE_BADGE[post.authorRole]
+  const presence = presenceMap?.[post.author]
+  const isOnline = presence?.isOnline ?? false
+  const lastSeenLabel = presence && !isOnline && presence.last_seen
+    ? `Utoljára: ${timeAgoHu(new Date(presence.last_seen).getTime())}`
+    : null
   const dragging = draggingId === post.id
   const dragOver = dragOverId === post.id && draggingId !== post.id
   const articleRef = useRef(null)
@@ -130,12 +135,18 @@ export default function PostCard({ post, session, onReact, onComment, onReplyCom
             <span className="dot">·</span>
             <span className="post-author-wrap">
               {post.author_avatar && (
-                <img
-                  src={post.author_avatar}
-                  alt={post.author}
-                  className="post-author-avatar"
+                <div
+                  className="avatar-presence-wrap"
                   onClick={() => onProfile?.(post.author)}
-                />
+                  title={isOnline ? 'Elérhető' : lastSeenLabel || undefined}
+                >
+                  <img
+                    src={post.author_avatar}
+                    alt={post.author}
+                    className="post-author-avatar"
+                  />
+                  <span className={`presence-dot${isOnline ? ' online' : presence ? ' offline' : ''}`} />
+                </div>
               )}
               <button className="post-author link-btn" onClick={() => onProfile?.(post.author)}>@{post.author}</button>
               {roleBadge && (

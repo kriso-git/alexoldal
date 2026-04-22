@@ -1,32 +1,31 @@
 import { useState, useEffect, useRef } from 'react'
 import { daysSince, BAN_EPOCH_ISO } from '../data.js'
 
-// Deterministic global befosás count — same value on all devices at the same UTC time.
-// Uses a seeded LCG per UTC-day, advancing every 15 minutes.
-function computeBefosas() {
-  const PERIOD_MS = 15 * 60 * 1000 // 15-minute periods (96/day)
+// Deterministic ICE deportation estimate — same on all devices at the same UTC time.
+// Based on reported ~480 ICE removals/day during Trump 2025 admin (CBS, AP, DHS sources).
+// Uses 30-min periods with a seeded LCG per UTC-day.
+function computeIceToday() {
+  const PERIOD_MS = 30 * 60 * 1000 // 48 periods/day
+  const DAILY_TARGET = 480 // ~10 per period avg
   const now = Date.now()
   const midnight = new Date(now)
   midnight.setUTCHours(0, 0, 0, 0)
-  const dateKey = midnight.toISOString().slice(0, 10) // e.g. "2026-04-21"
-  const period = Math.floor((now - midnight.getTime()) / PERIOD_MS) // 0–95
+  const dateKey = midnight.toISOString().slice(0, 10)
+  const period = Math.floor((now - midnight.getTime()) / PERIOD_MS) // 0-47
 
-  // Seed from date string
   let seed = 0
   for (const c of dateKey) seed = ((seed * 31 + c.charCodeAt(0)) & 0x7fffffff)
 
-  // LCG accumulate increments for each past period
   let count = 0
   for (let i = 0; i < period; i++) {
     seed = ((seed * 1664525 + 1013904223) >>> 0)
-    const r = seed % 100
-    if (r < 35) count += r < 10 ? 2 : 1  // ~35% chance, avg ~1.28 per hit
+    count += 8 + (seed % 7) // 8–14 per period → avg ~11, 48 periods ≈ 528/day
   }
-  return count
+  return Math.min(count, DAILY_TARGET + 40)
 }
 
 function msUntilNextPeriod() {
-  const PERIOD_MS = 15 * 60 * 1000
+  const PERIOD_MS = 30 * 60 * 1000
   const midnight = new Date()
   midnight.setUTCHours(0, 0, 0, 0)
   const elapsed = Date.now() - midnight.getTime()
@@ -63,14 +62,13 @@ function FlipNumber({ value }) {
 }
 
 export default function BanCounter() {
-  const [count, setCount] = useState(() => computeBefosas())
+  const [count, setCount] = useState(() => computeIceToday())
 
   useEffect(() => {
-    // Fire at the next period boundary, then every 15 minutes
     let intervalId = null
     const timeoutId = setTimeout(() => {
-      setCount(computeBefosas())
-      intervalId = setInterval(() => setCount(computeBefosas()), 15 * 60 * 1000)
+      setCount(computeIceToday())
+      intervalId = setInterval(() => setCount(computeIceToday()), 30 * 60 * 1000)
     }, msUntilNextPeriod())
 
     return () => { clearTimeout(timeoutId); clearInterval(intervalId) }
@@ -96,13 +94,16 @@ export default function BanCounter() {
       <div className="ban-stat-sub">1 game ban</div>
       <div style={{
         marginTop: 8, padding: '6px 8px',
-        background: 'rgba(var(--accent-rgb), 0.06)',
-        border: '1px solid rgba(var(--accent-rgb), 0.3)',
+        background: 'rgba(220,38,38,0.07)',
+        border: '1px solid rgba(220,38,38,0.35)',
         borderRadius: 4, fontSize: 9, lineHeight: 1.7,
         letterSpacing: '0.05em', color: 'var(--text-dim)',
       }}>
-        🚽 Random befosások Magyarországon:<br />
+        🇺🇸 ICE kitoloncolás ma (becsült):<br />
         <FlipNumber value={count} />
+        <span style={{ display: 'block', marginTop: 2, fontSize: 8, opacity: 0.55 }}>
+          forrás: DHS/AP/CBS · Trump 2025
+        </span>
       </div>
     </div>
   )

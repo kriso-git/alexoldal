@@ -215,6 +215,15 @@ export const profileWallApi = {
   delete: (username, id) => req(`/profile-wall/${encodeURIComponent(username)}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 }
 
+// ── Presence ──────────────────────────────────────────────────────────────────
+export const presenceApi = {
+  heartbeat: () => req('/presence', { method: 'POST' }).catch(() => null),
+  getMany: (usernames) => {
+    if (!usernames?.length) return Promise.resolve({})
+    return req(`/presence?usernames=${usernames.map(encodeURIComponent).join(',')}`).catch(() => ({}))
+  },
+}
+
 // ── Visits ────────────────────────────────────────────────────────────────────
 export const visitsApi = {
   increment: () => req('/visit', { method: 'POST' }),

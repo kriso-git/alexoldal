@@ -133,6 +133,8 @@ const BOOT_LINES = [
   { t: "checking twitch_live_status ........................... [OFFLINE]", c: "dim" },
   { t: "init user session ..................................... [READY]", c: "ok" },
   { t: "", c: "" },
+  { t: "I was meant to be new, I was meant to be beautiful...", c: "dim" },
+  { t: "", c: "" },
   { t: "welcome back. press any key to continue_", c: "ok" },
 ];
 

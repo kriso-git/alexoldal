@@ -1022,6 +1022,35 @@ body.cursor-trail .cursor-dot { display: block; }
 ::-webkit-scrollbar-track { background: var(--bg-1); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); }
 
+/* ── PRESENCE ────────────────────────────────────────────────────────────────── */
+.avatar-presence-wrap { position: relative; display: inline-flex; cursor: pointer; flex-shrink: 0; }
+.presence-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid var(--bg-2);
+  background: var(--border-strong);
+}
+.presence-dot.online {
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34,197,94,0.5);
+  animation: presencePulse 2s ease-in-out infinite;
+}
+.presence-dot.offline { background: #525252; }
+@keyframes presencePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  50%       { box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+}
+.profile-presence-dot { width: 12px; height: 12px; bottom: 4px; right: 4px; }
+.profile-presence-status {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-dim); letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+.profile-presence-status .presence-dot {
+  position: static; width: 8px; height: 8px; flex-shrink: 0; border-color: transparent;
+}
+
 /* ── POST AUTHOR ─────────────────────────────────────────────────────────────── */
 .post-author-wrap { display: inline-flex; align-items: center; gap: 6px; }
 .post-author-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; flex-shrink: 0; border: 1px solid var(--border-strong); transition: opacity 0.15s, border-color 0.15s; }

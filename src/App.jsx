@@ -13,7 +13,7 @@ import TiszaIntro from './components/TiszaIntro.jsx'
 import ProfilePage from './components/ProfilePage.jsx'
 import {
   setAccessToken, clearAccessToken, setUnauthCallback,
-  tryRestoreSession, authApi, postsApi, commentsApi,
+  tryRestoreSession, authApi, postsApi, commentsApi, presenceApi,
 } from './api.js'
 
 
@@ -35,6 +35,7 @@ export default function App() {
   const [dragOverId, setDragOverId] = useState(null)
   const [superadminOpen, setSuperadminOpen] = useState(false)
   const [profileUser, setProfileUser] = useState(null)
+  const [presenceMap, setPresenceMap] = useState({})
   const feedRef = useRef(null)
 
   const [tweaks, setTweaks] = useState(() => {
@@ -105,6 +106,24 @@ export default function App() {
   useEffect(() => {
     if (!loading) loadPosts()
   }, [session?.id])
+
+  // Presence heartbeat (every 30s while logged in)
+  useEffect(() => {
+    if (!session) return
+    presenceApi.heartbeat()
+    const id = setInterval(() => presenceApi.heartbeat(), 30_000)
+    return () => clearInterval(id)
+  }, [session?.id])
+
+  // Fetch presence for all post authors (every 60s)
+  useEffect(() => {
+    const usernames = [...new Set(posts.map(p => p.author).filter(Boolean))]
+    if (!usernames.length) return
+    const fetch = () => presenceApi.getMany(usernames).then(setPresenceMap)
+    fetch()
+    const id = setInterval(fetch, 60_000)
+    return () => clearInterval(id)
+  }, [posts])
 
   async function loadPosts() {
     try {
@@ -452,6 +471,7 @@ export default function App() {
                 post={p}
                 index={i}
                 session={session}
+                presenceMap={presenceMap}
                 onReact={reactPost}
                 onComment={addComment}
                 onReplyComment={replyComment}

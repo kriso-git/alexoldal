@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { formatDateHu, timeAgoHu } from '../data.js'
 import { toast } from '../effects.js'
-import { profileApi, profileWallApi, uploadFile } from '../api.js'
+import { profileApi, profileWallApi, uploadFile, presenceApi } from '../api.js'
 
 function getLevelInfo(xp = 0) {
   // LV n needs n*(n-1)/2 * 100 cumulative XP
@@ -39,6 +39,7 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
   const [newPassword, setNewPassword] = useState('')
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
 
+  const [profilePresence, setProfilePresence] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState(null)
   const [searching, setSearching] = useState(false)
@@ -57,6 +58,10 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
       setSearching(false)
     }
   }, [searchQuery])
+
+  useEffect(() => {
+    presenceApi.getMany([username]).then(data => setProfilePresence(data[username] ?? null))
+  }, [username])
 
   useEffect(() => {
     setLoading(true)
@@ -195,6 +200,9 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
             ? <img src={profile.avatar_url} alt={profile.username} className="profile-avatar" />
             : <div className="profile-avatar-placeholder">👤</div>
           }
+          {profilePresence && (
+            <span className={`presence-dot profile-presence-dot${profilePresence.isOnline ? ' online' : ' offline'}`} />
+          )}
           {canEdit && (
             <>
               <button
@@ -223,6 +231,18 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
           <div className="profile-role" style={{ color: roleColor }}>
             {profile.role === 'superadmin' ? '⚡ SUPERADMIN' : profile.role === 'admin' ? 'ADMIN' : 'USER'}
           </div>
+          {profilePresence && (
+            <div className="profile-presence-status">
+              <span className={`presence-dot${profilePresence.isOnline ? ' online' : ' offline'}`} style={{ width: 8, height: 8 }} />
+              <span>
+                {profilePresence.isOnline
+                  ? 'Elérhető'
+                  : profilePresence.last_seen
+                    ? `Utoljára: ${timeAgoHu(new Date(profilePresence.last_seen).getTime())}`
+                    : 'Offline'}
+              </span>
+            </div>
+          )}
           <div className="profile-level">LV.{lvInfo.level}</div>
           <div className="profile-xp-text">{profile.xp || 0} XP · még {lvInfo.required - lvInfo.progress} XP a következő szintig</div>
           <div className="profile-xp-bar">
