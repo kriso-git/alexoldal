@@ -60,7 +60,10 @@ export default function ProfilePage({ username, session, onBack, onProfile, onSe
   }, [searchQuery])
 
   useEffect(() => {
-    presenceApi.getMany([username]).then(data => setProfilePresence(data[username] ?? null))
+    const refresh = () => presenceApi.getMany([username]).then(data => setProfilePresence(data[username] ?? null))
+    refresh()
+    const id = setInterval(refresh, 60_000)
+    return () => clearInterval(id)
   }, [username])
 
   useEffect(() => {

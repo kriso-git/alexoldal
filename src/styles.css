@@ -1050,6 +1050,14 @@ body.cursor-trail .cursor-dot { display: block; }
 .profile-presence-status .presence-dot {
   position: static; width: 8px; height: 8px; flex-shrink: 0; border-color: transparent;
 }
+.presence-lastseen {
+  font-size: 9px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  opacity: 0.85;
+}
 
 /* ── POST AUTHOR ─────────────────────────────────────────────────────────────── */
 .post-author-wrap { display: inline-flex; align-items: center; gap: 6px; }

@@ -155,6 +155,9 @@ export default function PostCard({ post, session, presenceMap, onReact, onCommen
                 </span>
               )}
               {post.level > 1 && <span className="level-badge">LV.{post.level}</span>}
+              {presence && !isOnline && lastSeenLabel && (
+                <span className="presence-lastseen">{lastSeenLabel}</span>
+              )}
             </span>
           </div>
           <h2 className="post-title glitch-hover">
