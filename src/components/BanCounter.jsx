@@ -1,28 +1,36 @@
 import { useState, useEffect, useRef } from 'react'
 import { daysSince, BAN_EPOCH_ISO } from '../data.js'
 
-const LS_KEY = 'befosas_counter'
+// Deterministic global befosás count — same value on all devices at the same UTC time.
+// Uses a seeded LCG per UTC-day, advancing every 15 minutes.
+function computeBefosas() {
+  const PERIOD_MS = 15 * 60 * 1000 // 15-minute periods (96/day)
+  const now = Date.now()
+  const midnight = new Date(now)
+  midnight.setUTCHours(0, 0, 0, 0)
+  const dateKey = midnight.toISOString().slice(0, 10) // e.g. "2026-04-21"
+  const period = Math.floor((now - midnight.getTime()) / PERIOD_MS) // 0–95
 
-function getBudapestDateStr() {
-  return new Intl.DateTimeFormat('hu-HU', {
-    timeZone: 'Europe/Budapest',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date())
+  // Seed from date string
+  let seed = 0
+  for (const c of dateKey) seed = ((seed * 31 + c.charCodeAt(0)) & 0x7fffffff)
+
+  // LCG accumulate increments for each past period
+  let count = 0
+  for (let i = 0; i < period; i++) {
+    seed = ((seed * 1664525 + 1013904223) >>> 0)
+    const r = seed % 100
+    if (r < 35) count += r < 10 ? 2 : 1  // ~35% chance, avg ~1.28 per hit
+  }
+  return count
 }
 
-function loadCount() {
-  try {
-    const raw = localStorage.getItem(LS_KEY)
-    if (!raw) return 0
-    const { date, count } = JSON.parse(raw)
-    return date === getBudapestDateStr() ? count : 0
-  } catch { return 0 }
-}
-
-function saveCount(n) {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ date: getBudapestDateStr(), count: n }))
-  } catch {}
+function msUntilNextPeriod() {
+  const PERIOD_MS = 15 * 60 * 1000
+  const midnight = new Date()
+  midnight.setUTCHours(0, 0, 0, 0)
+  const elapsed = Date.now() - midnight.getTime()
+  return PERIOD_MS - (elapsed % PERIOD_MS)
 }
 
 function FlipDigit({ char }) {
@@ -55,35 +63,17 @@ function FlipNumber({ value }) {
 }
 
 export default function BanCounter() {
-  const [count, setCount] = useState(() => loadCount())
-  const countRef = useRef(loadCount())
+  const [count, setCount] = useState(() => computeBefosas())
 
   useEffect(() => {
-    let timeoutId
+    // Fire at the next period boundary, then every 15 minutes
+    let intervalId = null
+    const timeoutId = setTimeout(() => {
+      setCount(computeBefosas())
+      intervalId = setInterval(() => setCount(computeBefosas()), 15 * 60 * 1000)
+    }, msUntilNextPeriod())
 
-    const tick = () => {
-      const today = getBudapestDateStr()
-      let stored = { date: today, count: countRef.current }
-      try {
-        const raw = localStorage.getItem(LS_KEY)
-        if (raw) stored = JSON.parse(raw)
-      } catch {}
-
-      const currentCount = stored.date === today ? stored.count : 0
-      const inc = Math.random() < 0.5 ? 1 : 2
-      const next = currentCount + inc
-      countRef.current = next
-      saveCount(next)
-      setCount(next)
-
-      // 1 perc – 30 perc között random
-      const nextDelay = 60_000 + Math.random() * 1_740_000
-      timeoutId = setTimeout(tick, nextDelay)
-    }
-
-    // első tick is 1–30 perc után
-    timeoutId = setTimeout(tick, 60_000 + Math.random() * 1_740_000)
-    return () => clearTimeout(timeoutId)
+    return () => { clearTimeout(timeoutId); clearInterval(intervalId) }
   }, [])
 
   const d = daysSince(BAN_EPOCH_ISO)
@@ -105,15 +95,11 @@ export default function BanCounter() {
       <div className="ban-stat-label"><span>NAPJA NINCS BAN</span><span className="ban-dot"></span></div>
       <div className="ban-stat-sub">1 game ban</div>
       <div style={{
-        marginTop: 8,
-        padding: '6px 8px',
+        marginTop: 8, padding: '6px 8px',
         background: 'rgba(var(--accent-rgb), 0.06)',
         border: '1px solid rgba(var(--accent-rgb), 0.3)',
-        borderRadius: 4,
-        fontSize: 9,
-        lineHeight: 1.7,
-        letterSpacing: '0.05em',
-        color: 'var(--text-dim)',
+        borderRadius: 4, fontSize: 9, lineHeight: 1.7,
+        letterSpacing: '0.05em', color: 'var(--text-dim)',
       }}>
         🚽 Random befosások Magyarországon:<br />
         <FlipNumber value={count} />
