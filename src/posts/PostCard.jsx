@@ -5,6 +5,7 @@ import { commentsApi, uploadFile } from '../api.js'
 import Comment, { useCustomEmojis } from './Comment.jsx'
 import YouTubePlayer from './YouTubePlayer.jsx'
 import AudioPlayer from './AudioPlayer.jsx'
+import { t } from '../i18n.js'
 
 const REACTIONS = [
   { key: 'like',  emoji: '👍' },
@@ -250,14 +251,14 @@ export default function PostCard({ post, session, presenceMap, onReact, onCommen
         </div>
         <div className="post-actions">
           <button className="icon-btn" onClick={() => setCommentsOpen(o => !o)}>
-            💬 {commentCount} {commentsOpen ? 'elrejt' : 'komment'}
+            💬 {commentCount} {commentsOpen ? t('commentsHide') : t('comments')}
           </button>
           <div style={{ position: 'relative' }}>
             <button className="icon-btn" onClick={() => {
               const url = `${window.location.origin}/#${post.id}`
               navigator.clipboard?.writeText(url)
               setShareOpen(o => !o)
-            }}>↗ Megoszt</button>
+            }}>{t('share')}</button>
             {shareOpen && (
               <div style={{
                 position: 'absolute', bottom: '110%', right: 0, zIndex: 50,
@@ -265,27 +266,30 @@ export default function PostCard({ post, session, presenceMap, onReact, onCommen
                 borderRadius: 6, padding: '10px 12px', minWidth: 260, maxWidth: 340,
                 boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
               }}>
-                <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.1em', marginBottom: 4 }}>LINK MÁSOLVA</div>
+                <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.1em', marginBottom: 4 }}>{t('linkCopied')}</div>
                 <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>{post.title}</div>
+                <div style={{ fontSize: 9, color: 'var(--accent)', fontFamily: 'var(--font-mono)', marginBottom: 2, opacity: 0.9 }}>
+                  {index + 1}{t('postOnSite')}
+                </div>
                 <div style={{
-                  fontSize: 9, color: 'var(--accent)', fontFamily: 'var(--font-mono)',
-                  wordBreak: 'break-all', opacity: 0.8,
+                  fontSize: 9, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)',
+                  wordBreak: 'break-all', opacity: 0.7,
                 }}>{window.location.origin}/#{ post.id}</div>
                 <button
                   style={{ marginTop: 8, fontSize: 9, background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0, letterSpacing: '0.08em' }}
                   onClick={() => setShareOpen(false)}
-                >[ bezár ]</button>
+                >{t('close')}</button>
               </div>
             )}
           </div>
           {onPin && (
             <button className="icon-btn" onClick={() => onPin(post.id, !post.pinned)}
               title={post.pinned ? 'Kitűző eltávolítása' : 'Kitűzés az oldal tetejére'}>
-              {post.pinned ? '📌 Kitűzve' : '📌 Kitűz'}
+              {post.pinned ? t('pinned') : t('pin')}
             </button>
           )}
           {isAdmin && (
-            <button className="icon-btn danger" onClick={() => onDeletePost(post.id)}>🗑 Töröl</button>
+            <button className="icon-btn danger" onClick={() => onDeletePost(post.id)}>{t('delete')}</button>
           )}
         </div>
       </div>
@@ -296,7 +300,7 @@ export default function PostCard({ post, session, presenceMap, onReact, onCommen
             <div className="comment-form-row">
               <input
                 className="comment-input"
-                placeholder={`Írj kommentet ${session.username} néven...`}
+                placeholder={t('writeComment', session.username)}
                 value={commentText}
                 maxLength={2000}
                 onChange={e => setCommentText(e.target.value)}
@@ -304,7 +308,7 @@ export default function PostCard({ post, session, presenceMap, onReact, onCommen
               <button
                 type="button"
                 className="comment-attach-btn"
-                title="Kép / GIF csatolása"
+                title={t('attachFile')}
                 disabled={imageUploading}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -317,7 +321,7 @@ export default function PostCard({ post, session, presenceMap, onReact, onCommen
                 style={{ display: 'none' }}
                 onChange={handleImagePick}
               />
-              <button type="submit" className="comment-submit">Küld</button>
+              <button type="submit" className="comment-submit">{t('sendComment')}</button>
             </div>
             {pendingImage && (
               <div className="comment-image-preview">
@@ -332,21 +336,21 @@ export default function PostCard({ post, session, presenceMap, onReact, onCommen
           </form>
         ) : (
           <div className="comment-login-nudge">
-            A kommenteléshez{' '}
-            <button className="inline-link" onClick={() => onOpenAuth('login')}>lépj be</button>
-            {' '}vagy{' '}
-            <button className="inline-link" onClick={() => onOpenAuth('register')}>regisztrálj</button>.
+            {t('loginToComment')}{' '}
+            <button className="inline-link" onClick={() => onOpenAuth('login')}>{t('loginLink')}</button>
+            {' '}{t('orWord')}{' '}
+            <button className="inline-link" onClick={() => onOpenAuth('register')}>{t('registerLink')}</button>.
           </div>
         )}
         <div className="comment-list">
           {commentsLoading && (
             <div style={{ fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', padding: 12, letterSpacing: '0.1em' }}>
-              [ betöltés... ]
+              {t('loading')}
             </div>
           )}
           {!commentsLoading && comments?.length === 0 && (
             <div style={{ fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', padding: 12, letterSpacing: '0.1em' }}>
-              [ nincs komment — légy te az első ]
+              {t('noComments')}
             </div>
           )}
           {(comments || []).map(c => (

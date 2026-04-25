@@ -24,10 +24,23 @@ if (typeof window !== 'undefined') {
   }
 }
 
-export function extractVideoId(embedUrl) {
-  if (!embedUrl) return null
-  const m = embedUrl.match(/\/embed\/([^?&#/]+)/)
-  return m?.[1] || null
+export function extractVideoId(url) {
+  if (!url) return null
+  // Already a bare 11-char video ID
+  if (/^[A-Za-z0-9_-]{11}$/.test(url.trim())) return url.trim()
+  // /embed/ID
+  let m = url.match(/\/embed\/([A-Za-z0-9_-]{11})/)
+  if (m) return m[1]
+  // ?v=ID or &v=ID
+  m = url.match(/[?&]v=([A-Za-z0-9_-]{11})/)
+  if (m) return m[1]
+  // youtu.be/ID
+  m = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)
+  if (m) return m[1]
+  // /shorts/ID
+  m = url.match(/\/shorts\/([A-Za-z0-9_-]{11})/)
+  if (m) return m[1]
+  return null
 }
 
 export function fmtTime(s) {

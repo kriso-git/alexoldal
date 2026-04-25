@@ -27,7 +27,7 @@ export default function TiszaIntro() {
       title="🇭🇺"
       aria-label="Easter egg"
     >
-      <img src="/assets/tisza-logo.png" alt="" className="tisza-egg-img" />
+      <img src="/assets/TISZA_2024.svg.png" alt="" className="tisza-egg-img" />
     </button>
   )
 }

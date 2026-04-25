@@ -141,6 +141,18 @@ const BOOT_LINES = [
 export function playBoot(onDone) {
   const root = document.createElement("div");
   root.className = "crt-boot";
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "crt-boot-title";
+  titleEl.textContent = "F3xykee közösségi blog";
+  root.appendChild(titleEl);
+
+  const courageEl = document.createElement("img");
+  courageEl.className = "crt-boot-courage";
+  courageEl.src = "/assets/courage.gif";
+  courageEl.alt = "";
+  root.appendChild(courageEl);
+
   const wrap = document.createElement("div");
   wrap.className = "crt-lines";
   root.appendChild(wrap);

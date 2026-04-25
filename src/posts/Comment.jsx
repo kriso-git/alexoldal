@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { formatDateHu, timeAgoHu } from '../data.js'
 import { toast } from '../effects.js'
 import { uploadFile, customEmojiApi } from '../api.js'
+import { t } from '../i18n.js'
 
 const EMOJI_SET = ['👍','❤️','🔥','😂','😮','😢','💀','👀','🙏','🎉','💯','🤡']
 
@@ -129,13 +130,13 @@ export default function Comment({ c, session, isReply, onReply, onReact, onOpenA
             <button className="comment-action" onClick={() => {
               if (!session) return onOpenAuth('login')
               setReplyOpen(o => !o)
-            }}>↵ Válasz</button>
+            }}>{t('reply')}</button>
           )}
           <div className="emoji-picker-wrap" ref={emojiRef}>
             <button className="comment-action" onClick={() => {
               if (!session) return onOpenAuth('login')
               setShowEmoji(o => !o)
-            }}>☺ Reakció</button>
+            }}>{t('reaction')}</button>
             <div className={`emoji-picker${showEmoji ? ' open' : ''}`}>
               {EMOJI_SET.map(em => (
                 <button key={em} className="emoji-pick" onClick={() => { onReact(c.id, em); setShowEmoji(false) }}>{em}</button>
@@ -168,7 +169,7 @@ export default function Comment({ c, session, isReply, onReply, onReact, onOpenA
           <div className="comment-form-row">
             <input
               className="comment-input"
-              placeholder={`Válasz @${c.author} részére...`}
+              placeholder={t('replyTo', c.author)}
               value={replyText}
               maxLength={2000}
               onChange={e => setReplyText(e.target.value)}
@@ -190,7 +191,7 @@ export default function Comment({ c, session, isReply, onReply, onReact, onOpenA
               style={{ display: 'none' }}
               onChange={handleReplyImagePick}
             />
-            <button type="submit" className="comment-submit">Küld</button>
+            <button type="submit" className="comment-submit">{t('sendComment')}</button>
           </div>
           {replyImage && (
             <div className="comment-image-preview">

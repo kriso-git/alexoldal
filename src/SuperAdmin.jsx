@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { superadminApi, songsApi, customEmojiApi, uploadFile } from './api.js'
+import { superadminApi, songsApi, customEmojiApi, uploadFile, profileApi } from './api.js'
 import { toast } from './effects.js'
 import { formatDateHu, timeAgoHu } from './data.js'
 
 const ROLE_COLORS = { superadmin: 'var(--magenta)', admin: 'var(--accent)', user: 'var(--text-dim)' }
+const ROLE_LABELS = { superadmin: '⚡ Superadmin', admin: '🛡 Admin', user: '👤 Guest' }
 
 function StatCard({ label, value, color }) {
   return (
@@ -125,7 +126,7 @@ function UsersTab({ currentUserId }) {
                   onChange={e => setRole(u.id, e.target.value)}
                   style={{ fontSize: 10, padding: '3px 8px', minWidth: 110 }}
                 >
-                  <option value="user">👤 User</option>
+                  <option value="user">👤 Guest</option>
                   <option value="admin">🛡 Admin</option>
                   <option value="superadmin">⚡ Superadmin</option>
                 </select>
@@ -137,7 +138,7 @@ function UsersTab({ currentUserId }) {
                   onChange={e => setRole(u.id, e.target.value)}
                   style={{ fontSize: 10, padding: '3px 8px', minWidth: 110 }}
                 >
-                  <option value="user">👤 User</option>
+                  <option value="user">👤 Guest</option>
                   <option value="admin">🛡 Admin</option>
                   <option value="superadmin">⚡ Superadmin</option>
                 </select>
@@ -643,6 +644,97 @@ function EmojisTab() {
   )
 }
 
+// ── My Account tab ────────────────────────────────────────────────────────────
+function MyAccountTab({ session }) {
+  const [newUsername, setNewUsername] = useState(session?.username || '')
+  const [newPassword, setNewPassword] = useState('')
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+
+  const handleSaveUsername = async (e) => {
+    e.preventDefault()
+    const trimmed = newUsername.trim()
+    if (!trimmed || trimmed === session?.username) { toast('Nincs változtatás'); return }
+    setSavingUsername(true)
+    try {
+      await profileApi.update(session.username, { username: trimmed })
+      toast('Felhasználónév frissítve — kérjük lépj be újra')
+    } catch (err) { toast(err.message, 'err') }
+    finally { setSavingUsername(false) }
+  }
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault()
+    if (!newPassword) return
+    if (newPassword !== newPasswordConfirm) { toast('A jelszavak nem egyeznek', 'err'); return }
+    if (newPassword.length < 8) { toast('Min. 8 karakter', 'err'); return }
+    setSavingPassword(true)
+    try {
+      await profileApi.update(session.username, { password: newPassword })
+      setNewPassword(''); setNewPasswordConfirm('')
+      toast('Jelszó frissítve')
+    } catch (err) { toast(err.message, 'err') }
+    finally { setSavingPassword(false) }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 480 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.1em' }}>
+        Saját superadmin fiók adatainak módosítása.
+      </div>
+
+      <div>
+        <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'var(--font-mono)' }}>
+          Felhasználónév
+        </div>
+        <form onSubmit={handleSaveUsername} style={{ display: 'flex', gap: 8 }}>
+          <input
+            className="form-input"
+            value={newUsername}
+            onChange={e => setNewUsername(e.target.value)}
+            placeholder="Felhasználónév"
+            minLength={3}
+            maxLength={32}
+            style={{ flex: 1 }}
+          />
+          <button type="submit" className="btn" disabled={savingUsername}>
+            {savingUsername ? 'Mentés...' : 'Mentés'}
+          </button>
+        </form>
+      </div>
+
+      <div>
+        <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8, fontFamily: 'var(--font-mono)' }}>
+          Jelszó változtatása
+        </div>
+        <form onSubmit={handleSavePassword} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <input
+            className="form-input"
+            type="password"
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            placeholder="Új jelszó (min. 8 karakter)"
+            minLength={8}
+          />
+          {newPassword && (
+            <input
+              className="form-input"
+              type="password"
+              value={newPasswordConfirm}
+              onChange={e => setNewPasswordConfirm(e.target.value)}
+              placeholder="Jelszó megerősítése"
+            />
+          )}
+          <button type="submit" className="btn" disabled={savingPassword || !newPassword} style={{ alignSelf: 'flex-start' }}>
+            {savingPassword ? 'Mentés...' : 'Jelszó mentése'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ── Main SuperAdmin ───────────────────────────────────────────────────────────
 export default function SuperAdmin({ onClose, session, onLogout }) {
   const [tab, setTab] = useState('users')
@@ -652,6 +744,7 @@ export default function SuperAdmin({ onClose, session, onLogout }) {
     { id: 'music', label: '🎵 Zene' },
     { id: 'emojis', label: '🎨 Emojik' },
     { id: 'stats', label: '📊 Statisztika' },
+    { id: 'myaccount', label: '👤 Saját fiók' },
   ]
 
   return (
@@ -671,7 +764,7 @@ export default function SuperAdmin({ onClose, session, onLogout }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: '10px 20px', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.1em',
@@ -691,6 +784,7 @@ export default function SuperAdmin({ onClose, session, onLogout }) {
         {tab === 'music' && <MusicTab />}
         {tab === 'emojis' && <EmojisTab />}
         {tab === 'stats' && <StatsTab />}
+        {tab === 'myaccount' && <MyAccountTab session={session} />}
       </div>
     </div>
   )
