@@ -48,17 +48,19 @@ function QualityDropdown({ quality, qualities, onChange }) {
   )
 }
 
-function PlayerCore({ src, initialTime = 0, isModal, onExpand, onClose, onTimeUpdate }) {
+function PlayerCore({ src, initialTime = 0, initialQuality = null, isModal, onExpand, onClose, onTimeUpdate, onQualityChange }) {
   const containerRef = useRef(null)
   const playerRef = useRef(null)
   const timerRef = useRef(null)
+  const desiredQualityRef = useRef(initialQuality)
+  const enforceCountRef = useRef(0)
   const [volume, setVolume] = useState(80)
   const [muted, setMuted] = useState(false)
   const [currentTime, setCurrentTime] = useState(initialTime)
   const [duration, setDuration] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [ready, setReady] = useState(false)
-  const [quality, setQuality] = useState('hd1080')
+  const [quality, setQuality] = useState(initialQuality || 'medium')
   const [availableQualities, setAvailableQualities] = useState([])
 
   useEffect(() => {
@@ -85,6 +87,10 @@ function PlayerCore({ src, initialTime = 0, isModal, onExpand, onClose, onTimeUp
             const apiQuals = e.target.getAvailableQualityLevels?.() || []
             const filtered = apiQuals.filter(q => Q_LABELS[q])
             setAvailableQualities(filtered.length > 0 ? filtered : STATIC_QUALITIES)
+            if (desiredQualityRef.current) {
+              enforceCountRef.current = 0
+              e.target.setPlaybackQuality(desiredQualityRef.current)
+            }
             if (initialTime > 0) {
               e.target.seekTo(initialTime, true)
               e.target.playVideo?.()
@@ -95,7 +101,12 @@ function PlayerCore({ src, initialTime = 0, isModal, onExpand, onClose, onTimeUp
             const YT = window.YT.PlayerState
             if (e.data === YT.PLAYING) {
               setPlaying(true)
-              setQuality(playerRef.current?.getPlaybackQuality?.() || 'hd1080')
+              setAvailableQualities(prev => {
+                if (prev.length > 0) return prev
+                const apiQuals = playerRef.current?.getAvailableQualityLevels?.() || []
+                const filtered = apiQuals.filter(q => Q_LABELS[q])
+                return filtered.length > 0 ? filtered : STATIC_QUALITIES
+              })
               clearInterval(timerRef.current)
               timerRef.current = setInterval(() => {
                 const p = playerRef.current
@@ -115,13 +126,29 @@ function PlayerCore({ src, initialTime = 0, isModal, onExpand, onClose, onTimeUp
               }
             }
           },
-          onPlaybackQualityChange: (e) => setQuality(e.data || 'hd1080'),
+          onPlaybackQualityChange: (e) => {
+            const actual = e.data || 'medium'
+            const desired = desiredQualityRef.current
+            // YouTube overrode our choice — re-enforce up to 2 extra times
+            if (desired && actual !== desired && enforceCountRef.current < 2) {
+              enforceCountRef.current++
+              playerRef.current?.setPlaybackQuality?.(desired)
+              return
+            }
+            // Accept actual quality (confirmed, exhausted retries, or no preference)
+            desiredQualityRef.current = null
+            enforceCountRef.current = 0
+            setQuality(actual)
+            onQualityChange?.(actual)
+          },
         },
       })
     })
 
     return () => {
       destroyed = true
+      desiredQualityRef.current = null
+      enforceCountRef.current = 0
       clearInterval(timerRef.current)
       try { playerRef.current?.destroy?.() } catch {}
       playerRef.current = null
@@ -156,14 +183,14 @@ function PlayerCore({ src, initialTime = 0, isModal, onExpand, onClose, onTimeUp
     setCurrentTime(t); onTimeUpdate?.(t)
   }
 
-  // loadVideoById forces a full reload at the requested quality — most reliable approach
   const handleQualityChange = useCallback((q) => {
     const p = playerRef.current; if (!p) return
-    const t = p.getCurrentTime?.() || 0
-    const vid = extractVideoId(src)
-    p.loadVideoById({ videoId: vid, startSeconds: t, suggestedQuality: q })
+    desiredQualityRef.current = q
+    enforceCountRef.current = 0
+    p.setPlaybackQuality(q)
     setQuality(q)
-  }, [src])
+    onQualityChange?.(q)
+  }, [onQualityChange])
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
@@ -215,7 +242,9 @@ function PlayerCore({ src, initialTime = 0, isModal, onExpand, onClose, onTimeUp
 export default function YouTubePlayer({ src }) {
   const [expanded, setExpanded] = useState(false)
   const timeRef = useRef(0)
+  const qualityRef = useRef(null)
   const handleTimeUpdate = useCallback((t) => { timeRef.current = t }, [])
+  const handleQualityChange = useCallback((q) => { qualityRef.current = q }, [])
 
   useEffect(() => {
     if (!expanded) return
@@ -230,8 +259,10 @@ export default function YouTubePlayer({ src }) {
         <PlayerCore
           src={src}
           initialTime={timeRef.current}
+          initialQuality={qualityRef.current}
           onExpand={() => setExpanded(true)}
           onTimeUpdate={handleTimeUpdate}
+          onQualityChange={handleQualityChange}
         />
       )}
       {expanded && createPortal(
@@ -243,9 +274,11 @@ export default function YouTubePlayer({ src }) {
             <PlayerCore
               src={src}
               initialTime={timeRef.current}
+              initialQuality={qualityRef.current}
               isModal
               onClose={() => setExpanded(false)}
               onTimeUpdate={handleTimeUpdate}
+              onQualityChange={handleQualityChange}
             />
           </div>
         </div>,
